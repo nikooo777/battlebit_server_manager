@@ -1,0 +1,18 @@
+{
+  "sprays_db": {
+    "host": "localhost",
+    "user": "sprays",
+    "database": "sprays",
+    "password": "sprays"
+  },
+  "sb_db": {
+    "host": "localhost",
+    "user": "sb",
+    "database": "sb",
+    "password": "sb"
+  },
+  "domain": "your.domain.here:6456",
+  "steam_api_key": "keyhere",
+  "cookie_secret": "generate a random key here",
+  "discord_hook": "https://discord.com/api/webhooks/yourwebhookhere"
+}
