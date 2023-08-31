@@ -99,13 +99,18 @@
             $.get(url, function (data) {
                 $("#chatLogs").empty();
                 data.logs.forEach(log => {
-                    let row = $(`
-                        <tr data-steamid="${log.steamid_64}">
-                            <td><a href="http://steamcommunity.com/profiles/${log.steamid_64}" target="_blank">${log.username}</a></td>
-                            <td>${log.message}</td>
-                            <td>${log.timestamp}</td>
-                        </tr>
-                    `);
+                    let row = $("<tr>").attr("data-steamid", log.steamid_64);
+                    let tdUsername = $("<td>");
+                    let tdMessage = $("<td>").text(log.message);
+                    let tdTimestamp = $("<td>").text(log.timestamp);
+
+                    let a = $("<a>")
+                        .attr("href", "http://steamcommunity.com/profiles/" + log.steamid_64)
+                        .attr("target", "_blank")
+                        .text(log.username);
+
+                    tdUsername.append(a);
+                    row.append(tdUsername, tdMessage, tdTimestamp);
 
                     row.click(function() {
                         const steamID = $(this).data('steamid');
