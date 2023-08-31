@@ -1,9 +1,9 @@
 {
-  "sprays_db": {
+  "battlebit_db": {
     "host": "localhost",
-    "user": "sprays",
-    "database": "sprays",
-    "password": "sprays"
+    "user": "battlebit",
+    "database": "battlebit",
+    "password": "battlebit"
   },
   "sb_db": {
     "host": "localhost",

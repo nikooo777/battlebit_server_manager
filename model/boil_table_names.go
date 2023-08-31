@@ -7,6 +7,7 @@ var TableNames = struct {
 	Admins         string
 	Blocks         string
 	ChatLogs       string
+	GorpMigrations string
 	Player         string
 	PlayerProgress string
 	PlayerReports  string
@@ -14,6 +15,7 @@ var TableNames = struct {
 	Admins:         "admins",
 	Blocks:         "blocks",
 	ChatLogs:       "chat_logs",
+	GorpMigrations: "gorp_migrations",
 	Player:         "player",
 	PlayerProgress: "player_progress",
 	PlayerReports:  "player_reports",

@@ -43,17 +43,12 @@ var serveCmd = &cobra.Command{
 		if err != nil {
 			logrus.Fatalf("failed to initialize database: %s", err.Error())
 		}
-		db, err := sql.Open("mysql", battlebitDsn)
+		bbDb, err := sql.Open("mysql", battlebitDsn)
 		if err != nil {
 			panic(err.Error())
 		}
-		sbDSN := fmt.Sprintf("%s:%s@tcp(%s:3306)/%s?parseTime=true", viper.GetString("sb_db.user"), viper.GetString("sb_db.password"), viper.GetString("sb_db.host"), viper.GetString("sb_db.database"))
-		sbDb, err := sql.Open("mysql", sbDSN)
-		if err != nil {
-			panic(err.Error())
-		}
-		defer db.Close()
-		s := http.NewServer(stopGrp, db, sbDb)
+		defer bbDb.Close()
+		s := http.NewServer(stopGrp)
 		err = s.Start(Addr)
 		if err != nil {
 			logrus.Fatal(err)

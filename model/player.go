@@ -25,6 +25,7 @@ import (
 type Player struct {
 	ID           int        `boil:"id" json:"id" toml:"id" yaml:"id"`
 	SteamID      int64      `boil:"steam_id" json:"steam_id" toml:"steam_id" yaml:"steam_id"`
+	Name         string     `boil:"name" json:"name" toml:"name" yaml:"name"`
 	IsBanned     bool       `boil:"is_banned" json:"is_banned" toml:"is_banned" yaml:"is_banned"`
 	Roles        null.Int   `boil:"roles" json:"roles,omitempty" toml:"roles" yaml:"roles,omitempty"`
 	Achievements null.Bytes `boil:"achievements" json:"achievements,omitempty" toml:"achievements" yaml:"achievements,omitempty"`
@@ -40,6 +41,7 @@ type Player struct {
 var PlayerColumns = struct {
 	ID           string
 	SteamID      string
+	Name         string
 	IsBanned     string
 	Roles        string
 	Achievements string
@@ -50,6 +52,7 @@ var PlayerColumns = struct {
 }{
 	ID:           "id",
 	SteamID:      "steam_id",
+	Name:         "name",
 	IsBanned:     "is_banned",
 	Roles:        "roles",
 	Achievements: "achievements",
@@ -62,6 +65,7 @@ var PlayerColumns = struct {
 var PlayerTableColumns = struct {
 	ID           string
 	SteamID      string
+	Name         string
 	IsBanned     string
 	Roles        string
 	Achievements string
@@ -72,6 +76,7 @@ var PlayerTableColumns = struct {
 }{
 	ID:           "player.id",
 	SteamID:      "player.steam_id",
+	Name:         "player.name",
 	IsBanned:     "player.is_banned",
 	Roles:        "player.roles",
 	Achievements: "player.achievements",
@@ -157,6 +162,7 @@ func (w whereHelpernull_Bytes) IsNotNull() qm.QueryMod { return qmhelper.WhereIs
 var PlayerWhere = struct {
 	ID           whereHelperint
 	SteamID      whereHelperint64
+	Name         whereHelperstring
 	IsBanned     whereHelperbool
 	Roles        whereHelpernull_Int
 	Achievements whereHelpernull_Bytes
@@ -167,6 +173,7 @@ var PlayerWhere = struct {
 }{
 	ID:           whereHelperint{field: "`player`.`id`"},
 	SteamID:      whereHelperint64{field: "`player`.`steam_id`"},
+	Name:         whereHelperstring{field: "`player`.`name`"},
 	IsBanned:     whereHelperbool{field: "`player`.`is_banned`"},
 	Roles:        whereHelpernull_Int{field: "`player`.`roles`"},
 	Achievements: whereHelpernull_Bytes{field: "`player`.`achievements`"},
@@ -234,8 +241,8 @@ func (r *playerR) GetReportedPlayerPlayerReports() PlayerReportSlice {
 type playerL struct{}
 
 var (
-	playerAllColumns            = []string{"id", "steam_id", "is_banned", "roles", "achievements", "selections", "tool_progress", "created_at", "updated_at"}
-	playerColumnsWithoutDefault = []string{"steam_id", "is_banned", "roles", "achievements", "selections", "tool_progress"}
+	playerAllColumns            = []string{"id", "steam_id", "name", "is_banned", "roles", "achievements", "selections", "tool_progress", "created_at", "updated_at"}
+	playerColumnsWithoutDefault = []string{"steam_id", "name", "is_banned", "roles", "achievements", "selections", "tool_progress"}
 	playerColumnsWithDefault    = []string{"id", "created_at", "updated_at"}
 	playerPrimaryKeyColumns     = []string{"id"}
 	playerGeneratedColumns      = []string{}
