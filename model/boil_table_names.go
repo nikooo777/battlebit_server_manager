@@ -11,6 +11,7 @@ var TableNames = struct {
 	Player         string
 	PlayerProgress string
 	PlayerReports  string
+	Suggestions    string
 }{
 	Admins:         "admins",
 	Blocks:         "blocks",
@@ -19,4 +20,5 @@ var TableNames = struct {
 	Player:         "player",
 	PlayerProgress: "player_progress",
 	PlayerReports:  "player_reports",
+	Suggestions:    "suggestions",
 }

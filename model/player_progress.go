@@ -23,8 +23,10 @@ import (
 
 // PlayerProgress is an object representing the database table.
 type PlayerProgress struct {
-	ID                  int       `boil:"id" json:"id" toml:"id" yaml:"id"`
-	PlayerID            null.Int  `boil:"player_id" json:"player_id,omitempty" toml:"player_id" yaml:"player_id,omitempty"`
+	ID       int      `boil:"id" json:"id" toml:"id" yaml:"id"`
+	PlayerID null.Int `boil:"player_id" json:"player_id,omitempty" toml:"player_id" yaml:"player_id,omitempty"`
+	// when 1 it means the stats are from the official game, when 0 it's from our own servers
+	IsOfficial          int8      `boil:"is_official" json:"is_official" toml:"is_official" yaml:"is_official"`
 	KillCount           null.Uint `boil:"kill_count" json:"kill_count,omitempty" toml:"kill_count" yaml:"kill_count,omitempty"`
 	DeathCount          null.Uint `boil:"death_count" json:"death_count,omitempty" toml:"death_count" yaml:"death_count,omitempty"`
 	LeaderKills         null.Uint `boil:"leader_kills" json:"leader_kills,omitempty" toml:"leader_kills" yaml:"leader_kills,omitempty"`
@@ -77,6 +79,7 @@ type PlayerProgress struct {
 var PlayerProgressColumns = struct {
 	ID                  string
 	PlayerID            string
+	IsOfficial          string
 	KillCount           string
 	DeathCount          string
 	LeaderKills         string
@@ -124,6 +127,7 @@ var PlayerProgressColumns = struct {
 }{
 	ID:                  "id",
 	PlayerID:            "player_id",
+	IsOfficial:          "is_official",
 	KillCount:           "kill_count",
 	DeathCount:          "death_count",
 	LeaderKills:         "leader_kills",
@@ -173,6 +177,7 @@ var PlayerProgressColumns = struct {
 var PlayerProgressTableColumns = struct {
 	ID                  string
 	PlayerID            string
+	IsOfficial          string
 	KillCount           string
 	DeathCount          string
 	LeaderKills         string
@@ -220,6 +225,7 @@ var PlayerProgressTableColumns = struct {
 }{
 	ID:                  "player_progress.id",
 	PlayerID:            "player_progress.player_id",
+	IsOfficial:          "player_progress.is_official",
 	KillCount:           "player_progress.kill_count",
 	DeathCount:          "player_progress.death_count",
 	LeaderKills:         "player_progress.leader_kills",
@@ -268,6 +274,29 @@ var PlayerProgressTableColumns = struct {
 
 // Generated where
 
+type whereHelperint8 struct{ field string }
+
+func (w whereHelperint8) EQ(x int8) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
+func (w whereHelperint8) NEQ(x int8) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
+func (w whereHelperint8) LT(x int8) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
+func (w whereHelperint8) LTE(x int8) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
+func (w whereHelperint8) GT(x int8) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
+func (w whereHelperint8) GTE(x int8) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
+func (w whereHelperint8) IN(slice []int8) qm.QueryMod {
+	values := make([]interface{}, 0, len(slice))
+	for _, value := range slice {
+		values = append(values, value)
+	}
+	return qm.WhereIn(fmt.Sprintf("%s IN ?", w.field), values...)
+}
+func (w whereHelperint8) NIN(slice []int8) qm.QueryMod {
+	values := make([]interface{}, 0, len(slice))
+	for _, value := range slice {
+		values = append(values, value)
+	}
+	return qm.WhereNotIn(fmt.Sprintf("%s NOT IN ?", w.field), values...)
+}
+
 type whereHelpernull_Uint struct{ field string }
 
 func (w whereHelpernull_Uint) EQ(x null.Uint) qm.QueryMod {
@@ -309,6 +338,7 @@ func (w whereHelpernull_Uint) IsNotNull() qm.QueryMod { return qmhelper.WhereIsN
 var PlayerProgressWhere = struct {
 	ID                  whereHelperint
 	PlayerID            whereHelpernull_Int
+	IsOfficial          whereHelperint8
 	KillCount           whereHelpernull_Uint
 	DeathCount          whereHelpernull_Uint
 	LeaderKills         whereHelpernull_Uint
@@ -356,6 +386,7 @@ var PlayerProgressWhere = struct {
 }{
 	ID:                  whereHelperint{field: "`player_progress`.`id`"},
 	PlayerID:            whereHelpernull_Int{field: "`player_progress`.`player_id`"},
+	IsOfficial:          whereHelperint8{field: "`player_progress`.`is_official`"},
 	KillCount:           whereHelpernull_Uint{field: "`player_progress`.`kill_count`"},
 	DeathCount:          whereHelpernull_Uint{field: "`player_progress`.`death_count`"},
 	LeaderKills:         whereHelpernull_Uint{field: "`player_progress`.`leader_kills`"},
@@ -430,8 +461,8 @@ func (r *playerProgressR) GetPlayer() *Player {
 type playerProgressL struct{}
 
 var (
-	playerProgressAllColumns            = []string{"id", "player_id", "kill_count", "death_count", "leader_kills", "assault_kills", "medic_kills", "engineer_kills", "support_kills", "recon_kills", "win_count", "lose_count", "friendly_shots", "friendly_kills", "revived", "revived_team_mates", "assists", "prestige", "current_rank", "exp", "shots_fired", "shots_hit", "headshots", "completed_objectives", "healed_hps", "road_kills", "suicides", "vehicles_destroyed", "vehicle_hp_repaired", "longest_kill", "play_time_seconds", "leader_play_time", "assault_play_time", "medic_play_time", "engineer_play_time", "support_play_time", "recon_play_time", "leader_score", "assault_score", "medic_score", "engineer_score", "support_score", "recon_score", "total_score", "created_at", "updated_at"}
-	playerProgressColumnsWithoutDefault = []string{"player_id"}
+	playerProgressAllColumns            = []string{"id", "player_id", "is_official", "kill_count", "death_count", "leader_kills", "assault_kills", "medic_kills", "engineer_kills", "support_kills", "recon_kills", "win_count", "lose_count", "friendly_shots", "friendly_kills", "revived", "revived_team_mates", "assists", "prestige", "current_rank", "exp", "shots_fired", "shots_hit", "headshots", "completed_objectives", "healed_hps", "road_kills", "suicides", "vehicles_destroyed", "vehicle_hp_repaired", "longest_kill", "play_time_seconds", "leader_play_time", "assault_play_time", "medic_play_time", "engineer_play_time", "support_play_time", "recon_play_time", "leader_score", "assault_score", "medic_score", "engineer_score", "support_score", "recon_score", "total_score", "created_at", "updated_at"}
+	playerProgressColumnsWithoutDefault = []string{"player_id", "is_official"}
 	playerProgressColumnsWithDefault    = []string{"id", "kill_count", "death_count", "leader_kills", "assault_kills", "medic_kills", "engineer_kills", "support_kills", "recon_kills", "win_count", "lose_count", "friendly_shots", "friendly_kills", "revived", "revived_team_mates", "assists", "prestige", "current_rank", "exp", "shots_fired", "shots_hit", "headshots", "completed_objectives", "healed_hps", "road_kills", "suicides", "vehicles_destroyed", "vehicle_hp_repaired", "longest_kill", "play_time_seconds", "leader_play_time", "assault_play_time", "medic_play_time", "engineer_play_time", "support_play_time", "recon_play_time", "leader_score", "assault_score", "medic_score", "engineer_score", "support_score", "recon_score", "total_score", "created_at", "updated_at"}
 	playerProgressPrimaryKeyColumns     = []string{"id"}
 	playerProgressGeneratedColumns      = []string{}
@@ -635,7 +666,7 @@ func (playerProgressL) LoadPlayer(e boil.Executor, singular bool, maybePlayerPro
 		if foreign.R == nil {
 			foreign.R = &playerR{}
 		}
-		foreign.R.PlayerProgress = object
+		foreign.R.PlayerProgresses = append(foreign.R.PlayerProgresses, object)
 		return nil
 	}
 
@@ -646,7 +677,7 @@ func (playerProgressL) LoadPlayer(e boil.Executor, singular bool, maybePlayerPro
 				if foreign.R == nil {
 					foreign.R = &playerR{}
 				}
-				foreign.R.PlayerProgress = local
+				foreign.R.PlayerProgresses = append(foreign.R.PlayerProgresses, local)
 				break
 			}
 		}
@@ -657,7 +688,7 @@ func (playerProgressL) LoadPlayer(e boil.Executor, singular bool, maybePlayerPro
 
 // SetPlayer of the playerProgress to the related item.
 // Sets o.R.Player to related.
-// Adds o to related.R.PlayerProgress.
+// Adds o to related.R.PlayerProgresses.
 func (o *PlayerProgress) SetPlayer(exec boil.Executor, insert bool, related *Player) error {
 	var err error
 	if insert {
@@ -692,10 +723,10 @@ func (o *PlayerProgress) SetPlayer(exec boil.Executor, insert bool, related *Pla
 
 	if related.R == nil {
 		related.R = &playerR{
-			PlayerProgress: o,
+			PlayerProgresses: PlayerProgressSlice{o},
 		}
 	} else {
-		related.R.PlayerProgress = o
+		related.R.PlayerProgresses = append(related.R.PlayerProgresses, o)
 	}
 
 	return nil
@@ -719,7 +750,18 @@ func (o *PlayerProgress) RemovePlayer(exec boil.Executor, related *Player) error
 		return nil
 	}
 
-	related.R.PlayerProgress = nil
+	for i, ri := range related.R.PlayerProgresses {
+		if queries.Equal(o.PlayerID, ri.PlayerID) {
+			continue
+		}
+
+		ln := len(related.R.PlayerProgresses)
+		if ln > 1 && i < ln-1 {
+			related.R.PlayerProgresses[i] = related.R.PlayerProgresses[ln-1]
+		}
+		related.R.PlayerProgresses = related.R.PlayerProgresses[:ln-1]
+		break
+	}
 	return nil
 }
 
@@ -966,7 +1008,6 @@ func (o PlayerProgressSlice) UpdateAll(exec boil.Executor, cols M) error {
 
 var mySQLPlayerProgressUniqueColumns = []string{
 	"id",
-	"player_id",
 }
 
 // Upsert attempts an insert using an executor, and does an update or ignore on conflict.

@@ -185,23 +185,26 @@ var PlayerWhere = struct {
 
 // PlayerRels is where relationship names are stored.
 var PlayerRels = struct {
-	PlayerProgress              string
 	ChatLogs                    string
+	PlayerProgresses            string
 	ReporterPlayerReports       string
 	ReportedPlayerPlayerReports string
+	Suggestions                 string
 }{
-	PlayerProgress:              "PlayerProgress",
 	ChatLogs:                    "ChatLogs",
+	PlayerProgresses:            "PlayerProgresses",
 	ReporterPlayerReports:       "ReporterPlayerReports",
 	ReportedPlayerPlayerReports: "ReportedPlayerPlayerReports",
+	Suggestions:                 "Suggestions",
 }
 
 // playerR is where relationships are stored.
 type playerR struct {
-	PlayerProgress              *PlayerProgress   `boil:"PlayerProgress" json:"PlayerProgress" toml:"PlayerProgress" yaml:"PlayerProgress"`
-	ChatLogs                    ChatLogSlice      `boil:"ChatLogs" json:"ChatLogs" toml:"ChatLogs" yaml:"ChatLogs"`
-	ReporterPlayerReports       PlayerReportSlice `boil:"ReporterPlayerReports" json:"ReporterPlayerReports" toml:"ReporterPlayerReports" yaml:"ReporterPlayerReports"`
-	ReportedPlayerPlayerReports PlayerReportSlice `boil:"ReportedPlayerPlayerReports" json:"ReportedPlayerPlayerReports" toml:"ReportedPlayerPlayerReports" yaml:"ReportedPlayerPlayerReports"`
+	ChatLogs                    ChatLogSlice        `boil:"ChatLogs" json:"ChatLogs" toml:"ChatLogs" yaml:"ChatLogs"`
+	PlayerProgresses            PlayerProgressSlice `boil:"PlayerProgresses" json:"PlayerProgresses" toml:"PlayerProgresses" yaml:"PlayerProgresses"`
+	ReporterPlayerReports       PlayerReportSlice   `boil:"ReporterPlayerReports" json:"ReporterPlayerReports" toml:"ReporterPlayerReports" yaml:"ReporterPlayerReports"`
+	ReportedPlayerPlayerReports PlayerReportSlice   `boil:"ReportedPlayerPlayerReports" json:"ReportedPlayerPlayerReports" toml:"ReportedPlayerPlayerReports" yaml:"ReportedPlayerPlayerReports"`
+	Suggestions                 SuggestionSlice     `boil:"Suggestions" json:"Suggestions" toml:"Suggestions" yaml:"Suggestions"`
 }
 
 // NewStruct creates a new relationship struct
@@ -209,18 +212,18 @@ func (*playerR) NewStruct() *playerR {
 	return &playerR{}
 }
 
-func (r *playerR) GetPlayerProgress() *PlayerProgress {
-	if r == nil {
-		return nil
-	}
-	return r.PlayerProgress
-}
-
 func (r *playerR) GetChatLogs() ChatLogSlice {
 	if r == nil {
 		return nil
 	}
 	return r.ChatLogs
+}
+
+func (r *playerR) GetPlayerProgresses() PlayerProgressSlice {
+	if r == nil {
+		return nil
+	}
+	return r.PlayerProgresses
 }
 
 func (r *playerR) GetReporterPlayerReports() PlayerReportSlice {
@@ -235,6 +238,13 @@ func (r *playerR) GetReportedPlayerPlayerReports() PlayerReportSlice {
 		return nil
 	}
 	return r.ReportedPlayerPlayerReports
+}
+
+func (r *playerR) GetSuggestions() SuggestionSlice {
+	if r == nil {
+		return nil
+	}
+	return r.Suggestions
 }
 
 // playerL is where Load methods for each relationship are stored.
@@ -339,17 +349,6 @@ func (q playerQuery) Exists(exec boil.Executor) (bool, error) {
 	return count > 0, nil
 }
 
-// PlayerProgress pointed to by the foreign key.
-func (o *Player) PlayerProgress(mods ...qm.QueryMod) playerProgressQuery {
-	queryMods := []qm.QueryMod{
-		qm.Where("`player_id` = ?", o.ID),
-	}
-
-	queryMods = append(queryMods, mods...)
-
-	return PlayerProgresses(queryMods...)
-}
-
 // ChatLogs retrieves all the chat_log's ChatLogs with an executor.
 func (o *Player) ChatLogs(mods ...qm.QueryMod) chatLogQuery {
 	var queryMods []qm.QueryMod
@@ -362,6 +361,20 @@ func (o *Player) ChatLogs(mods ...qm.QueryMod) chatLogQuery {
 	)
 
 	return ChatLogs(queryMods...)
+}
+
+// PlayerProgresses retrieves all the player_progress's PlayerProgresses with an executor.
+func (o *Player) PlayerProgresses(mods ...qm.QueryMod) playerProgressQuery {
+	var queryMods []qm.QueryMod
+	if len(mods) != 0 {
+		queryMods = append(queryMods, mods...)
+	}
+
+	queryMods = append(queryMods,
+		qm.Where("`player_progress`.`player_id`=?", o.ID),
+	)
+
+	return PlayerProgresses(queryMods...)
 }
 
 // ReporterPlayerReports retrieves all the player_report's PlayerReports with an executor via reporter_id column.
@@ -392,113 +405,18 @@ func (o *Player) ReportedPlayerPlayerReports(mods ...qm.QueryMod) playerReportQu
 	return PlayerReports(queryMods...)
 }
 
-// LoadPlayerProgress allows an eager lookup of values, cached into the
-// loaded structs of the objects. This is for a 1-1 relationship.
-func (playerL) LoadPlayerProgress(e boil.Executor, singular bool, maybePlayer interface{}, mods queries.Applicator) error {
-	var slice []*Player
-	var object *Player
-
-	if singular {
-		var ok bool
-		object, ok = maybePlayer.(*Player)
-		if !ok {
-			object = new(Player)
-			ok = queries.SetFromEmbeddedStruct(&object, &maybePlayer)
-			if !ok {
-				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybePlayer))
-			}
-		}
-	} else {
-		s, ok := maybePlayer.(*[]*Player)
-		if ok {
-			slice = *s
-		} else {
-			ok = queries.SetFromEmbeddedStruct(&slice, maybePlayer)
-			if !ok {
-				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybePlayer))
-			}
-		}
+// Suggestions retrieves all the suggestion's Suggestions with an executor.
+func (o *Player) Suggestions(mods ...qm.QueryMod) suggestionQuery {
+	var queryMods []qm.QueryMod
+	if len(mods) != 0 {
+		queryMods = append(queryMods, mods...)
 	}
 
-	args := make([]interface{}, 0, 1)
-	if singular {
-		if object.R == nil {
-			object.R = &playerR{}
-		}
-		args = append(args, object.ID)
-	} else {
-	Outer:
-		for _, obj := range slice {
-			if obj.R == nil {
-				obj.R = &playerR{}
-			}
-
-			for _, a := range args {
-				if queries.Equal(a, obj.ID) {
-					continue Outer
-				}
-			}
-
-			args = append(args, obj.ID)
-		}
-	}
-
-	if len(args) == 0 {
-		return nil
-	}
-
-	query := NewQuery(
-		qm.From(`player_progress`),
-		qm.WhereIn(`player_progress.player_id in ?`, args...),
+	queryMods = append(queryMods,
+		qm.Where("`suggestions`.`player_id`=?", o.ID),
 	)
-	if mods != nil {
-		mods.Apply(query)
-	}
 
-	results, err := query.Query(e)
-	if err != nil {
-		return errors.Wrap(err, "failed to eager load PlayerProgress")
-	}
-
-	var resultSlice []*PlayerProgress
-	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice PlayerProgress")
-	}
-
-	if err = results.Close(); err != nil {
-		return errors.Wrap(err, "failed to close results of eager load for player_progress")
-	}
-	if err = results.Err(); err != nil {
-		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for player_progress")
-	}
-
-	if len(resultSlice) == 0 {
-		return nil
-	}
-
-	if singular {
-		foreign := resultSlice[0]
-		object.R.PlayerProgress = foreign
-		if foreign.R == nil {
-			foreign.R = &playerProgressR{}
-		}
-		foreign.R.Player = object
-	}
-
-	for _, local := range slice {
-		for _, foreign := range resultSlice {
-			if queries.Equal(local.ID, foreign.PlayerID) {
-				local.R.PlayerProgress = foreign
-				if foreign.R == nil {
-					foreign.R = &playerProgressR{}
-				}
-				foreign.R.Player = local
-				break
-			}
-		}
-	}
-
-	return nil
+	return Suggestions(queryMods...)
 }
 
 // LoadChatLogs allows an eager lookup of values, cached into the
@@ -598,6 +516,113 @@ func (playerL) LoadChatLogs(e boil.Executor, singular bool, maybePlayer interfac
 				local.R.ChatLogs = append(local.R.ChatLogs, foreign)
 				if foreign.R == nil {
 					foreign.R = &chatLogR{}
+				}
+				foreign.R.Player = local
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
+// LoadPlayerProgresses allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (playerL) LoadPlayerProgresses(e boil.Executor, singular bool, maybePlayer interface{}, mods queries.Applicator) error {
+	var slice []*Player
+	var object *Player
+
+	if singular {
+		var ok bool
+		object, ok = maybePlayer.(*Player)
+		if !ok {
+			object = new(Player)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybePlayer)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybePlayer))
+			}
+		}
+	} else {
+		s, ok := maybePlayer.(*[]*Player)
+		if ok {
+			slice = *s
+		} else {
+			ok = queries.SetFromEmbeddedStruct(&slice, maybePlayer)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybePlayer))
+			}
+		}
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &playerR{}
+		}
+		args = append(args, object.ID)
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &playerR{}
+			}
+
+			for _, a := range args {
+				if queries.Equal(a, obj.ID) {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	query := NewQuery(
+		qm.From(`player_progress`),
+		qm.WhereIn(`player_progress.player_id in ?`, args...),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.Query(e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load player_progress")
+	}
+
+	var resultSlice []*PlayerProgress
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice player_progress")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on player_progress")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for player_progress")
+	}
+
+	if singular {
+		object.R.PlayerProgresses = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &playerProgressR{}
+			}
+			foreign.R.Player = object
+		}
+		return nil
+	}
+
+	for _, foreign := range resultSlice {
+		for _, local := range slice {
+			if queries.Equal(local.ID, foreign.PlayerID) {
+				local.R.PlayerProgresses = append(local.R.PlayerProgresses, foreign)
+				if foreign.R == nil {
+					foreign.R = &playerProgressR{}
 				}
 				foreign.R.Player = local
 				break
@@ -822,75 +847,109 @@ func (playerL) LoadReportedPlayerPlayerReports(e boil.Executor, singular bool, m
 	return nil
 }
 
-// SetPlayerProgress of the player to the related item.
-// Sets o.R.PlayerProgress to related.
-// Adds o to related.R.Player.
-func (o *Player) SetPlayerProgress(exec boil.Executor, insert bool, related *PlayerProgress) error {
-	var err error
+// LoadSuggestions allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (playerL) LoadSuggestions(e boil.Executor, singular bool, maybePlayer interface{}, mods queries.Applicator) error {
+	var slice []*Player
+	var object *Player
 
-	if insert {
-		queries.Assign(&related.PlayerID, o.ID)
-
-		if err = related.Insert(exec, boil.Infer()); err != nil {
-			return errors.Wrap(err, "failed to insert into foreign table")
+	if singular {
+		var ok bool
+		object, ok = maybePlayer.(*Player)
+		if !ok {
+			object = new(Player)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybePlayer)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybePlayer))
+			}
 		}
 	} else {
-		updateQuery := fmt.Sprintf(
-			"UPDATE `player_progress` SET %s WHERE %s",
-			strmangle.SetParamNames("`", "`", 0, []string{"player_id"}),
-			strmangle.WhereClause("`", "`", 0, playerProgressPrimaryKeyColumns),
-		)
-		values := []interface{}{o.ID, related.ID}
-
-		if boil.DebugMode {
-			fmt.Fprintln(boil.DebugWriter, updateQuery)
-			fmt.Fprintln(boil.DebugWriter, values)
+		s, ok := maybePlayer.(*[]*Player)
+		if ok {
+			slice = *s
+		} else {
+			ok = queries.SetFromEmbeddedStruct(&slice, maybePlayer)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybePlayer))
+			}
 		}
-		if _, err = exec.Exec(updateQuery, values...); err != nil {
-			return errors.Wrap(err, "failed to update foreign table")
-		}
-
-		queries.Assign(&related.PlayerID, o.ID)
 	}
 
-	if o.R == nil {
-		o.R = &playerR{
-			PlayerProgress: related,
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &playerR{}
 		}
+		args = append(args, object.ID)
 	} else {
-		o.R.PlayerProgress = related
-	}
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &playerR{}
+			}
 
-	if related.R == nil {
-		related.R = &playerProgressR{
-			Player: o,
+			for _, a := range args {
+				if queries.Equal(a, obj.ID) {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
 		}
-	} else {
-		related.R.Player = o
-	}
-	return nil
-}
-
-// RemovePlayerProgress relationship.
-// Sets o.R.PlayerProgress to nil.
-// Removes o from all passed in related items' relationships struct.
-func (o *Player) RemovePlayerProgress(exec boil.Executor, related *PlayerProgress) error {
-	var err error
-
-	queries.SetScanner(&related.PlayerID, nil)
-	if err = related.Update(exec, boil.Whitelist("player_id")); err != nil {
-		return errors.Wrap(err, "failed to update local table")
 	}
 
-	if o.R != nil {
-		o.R.PlayerProgress = nil
-	}
-
-	if related == nil || related.R == nil {
+	if len(args) == 0 {
 		return nil
 	}
 
-	related.R.Player = nil
+	query := NewQuery(
+		qm.From(`suggestions`),
+		qm.WhereIn(`suggestions.player_id in ?`, args...),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.Query(e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load suggestions")
+	}
+
+	var resultSlice []*Suggestion
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice suggestions")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on suggestions")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for suggestions")
+	}
+
+	if singular {
+		object.R.Suggestions = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &suggestionR{}
+			}
+			foreign.R.Player = object
+		}
+		return nil
+	}
+
+	for _, foreign := range resultSlice {
+		for _, local := range slice {
+			if queries.Equal(local.ID, foreign.PlayerID) {
+				local.R.Suggestions = append(local.R.Suggestions, foreign)
+				if foreign.R == nil {
+					foreign.R = &suggestionR{}
+				}
+				foreign.R.Player = local
+				break
+			}
+		}
+	}
 
 	return nil
 }
@@ -944,6 +1003,131 @@ func (o *Player) AddChatLogs(exec boil.Executor, insert bool, related ...*ChatLo
 			rel.R.Player = o
 		}
 	}
+	return nil
+}
+
+// AddPlayerProgresses adds the given related objects to the existing relationships
+// of the player, optionally inserting them as new records.
+// Appends related to o.R.PlayerProgresses.
+// Sets related.R.Player appropriately.
+func (o *Player) AddPlayerProgresses(exec boil.Executor, insert bool, related ...*PlayerProgress) error {
+	var err error
+	for _, rel := range related {
+		if insert {
+			queries.Assign(&rel.PlayerID, o.ID)
+			if err = rel.Insert(exec, boil.Infer()); err != nil {
+				return errors.Wrap(err, "failed to insert into foreign table")
+			}
+		} else {
+			updateQuery := fmt.Sprintf(
+				"UPDATE `player_progress` SET %s WHERE %s",
+				strmangle.SetParamNames("`", "`", 0, []string{"player_id"}),
+				strmangle.WhereClause("`", "`", 0, playerProgressPrimaryKeyColumns),
+			)
+			values := []interface{}{o.ID, rel.ID}
+
+			if boil.DebugMode {
+				fmt.Fprintln(boil.DebugWriter, updateQuery)
+				fmt.Fprintln(boil.DebugWriter, values)
+			}
+			if _, err = exec.Exec(updateQuery, values...); err != nil {
+				return errors.Wrap(err, "failed to update foreign table")
+			}
+
+			queries.Assign(&rel.PlayerID, o.ID)
+		}
+	}
+
+	if o.R == nil {
+		o.R = &playerR{
+			PlayerProgresses: related,
+		}
+	} else {
+		o.R.PlayerProgresses = append(o.R.PlayerProgresses, related...)
+	}
+
+	for _, rel := range related {
+		if rel.R == nil {
+			rel.R = &playerProgressR{
+				Player: o,
+			}
+		} else {
+			rel.R.Player = o
+		}
+	}
+	return nil
+}
+
+// SetPlayerProgresses removes all previously related items of the
+// player replacing them completely with the passed
+// in related items, optionally inserting them as new records.
+// Sets o.R.Player's PlayerProgresses accordingly.
+// Replaces o.R.PlayerProgresses with related.
+// Sets related.R.Player's PlayerProgresses accordingly.
+func (o *Player) SetPlayerProgresses(exec boil.Executor, insert bool, related ...*PlayerProgress) error {
+	query := "update `player_progress` set `player_id` = null where `player_id` = ?"
+	values := []interface{}{o.ID}
+	if boil.DebugMode {
+		fmt.Fprintln(boil.DebugWriter, query)
+		fmt.Fprintln(boil.DebugWriter, values)
+	}
+	_, err := exec.Exec(query, values...)
+	if err != nil {
+		return errors.Wrap(err, "failed to remove relationships before set")
+	}
+
+	if o.R != nil {
+		for _, rel := range o.R.PlayerProgresses {
+			queries.SetScanner(&rel.PlayerID, nil)
+			if rel.R == nil {
+				continue
+			}
+
+			rel.R.Player = nil
+		}
+		o.R.PlayerProgresses = nil
+	}
+
+	return o.AddPlayerProgresses(exec, insert, related...)
+}
+
+// RemovePlayerProgresses relationships from objects passed in.
+// Removes related items from R.PlayerProgresses (uses pointer comparison, removal does not keep order)
+// Sets related.R.Player.
+func (o *Player) RemovePlayerProgresses(exec boil.Executor, related ...*PlayerProgress) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	for _, rel := range related {
+		queries.SetScanner(&rel.PlayerID, nil)
+		if rel.R != nil {
+			rel.R.Player = nil
+		}
+		if err = rel.Update(exec, boil.Whitelist("player_id")); err != nil {
+			return err
+		}
+	}
+	if o.R == nil {
+		return nil
+	}
+
+	for _, rel := range related {
+		for i, ri := range o.R.PlayerProgresses {
+			if rel != ri {
+				continue
+			}
+
+			ln := len(o.R.PlayerProgresses)
+			if ln > 1 && i < ln-1 {
+				o.R.PlayerProgresses[i] = o.R.PlayerProgresses[ln-1]
+			}
+			o.R.PlayerProgresses = o.R.PlayerProgresses[:ln-1]
+			break
+		}
+	}
+
 	return nil
 }
 
@@ -1121,6 +1305,131 @@ func (o *Player) AddReportedPlayerPlayerReports(exec boil.Executor, insert bool,
 			rel.R.ReportedPlayer = o
 		}
 	}
+	return nil
+}
+
+// AddSuggestions adds the given related objects to the existing relationships
+// of the player, optionally inserting them as new records.
+// Appends related to o.R.Suggestions.
+// Sets related.R.Player appropriately.
+func (o *Player) AddSuggestions(exec boil.Executor, insert bool, related ...*Suggestion) error {
+	var err error
+	for _, rel := range related {
+		if insert {
+			queries.Assign(&rel.PlayerID, o.ID)
+			if err = rel.Insert(exec, boil.Infer()); err != nil {
+				return errors.Wrap(err, "failed to insert into foreign table")
+			}
+		} else {
+			updateQuery := fmt.Sprintf(
+				"UPDATE `suggestions` SET %s WHERE %s",
+				strmangle.SetParamNames("`", "`", 0, []string{"player_id"}),
+				strmangle.WhereClause("`", "`", 0, suggestionPrimaryKeyColumns),
+			)
+			values := []interface{}{o.ID, rel.ID}
+
+			if boil.DebugMode {
+				fmt.Fprintln(boil.DebugWriter, updateQuery)
+				fmt.Fprintln(boil.DebugWriter, values)
+			}
+			if _, err = exec.Exec(updateQuery, values...); err != nil {
+				return errors.Wrap(err, "failed to update foreign table")
+			}
+
+			queries.Assign(&rel.PlayerID, o.ID)
+		}
+	}
+
+	if o.R == nil {
+		o.R = &playerR{
+			Suggestions: related,
+		}
+	} else {
+		o.R.Suggestions = append(o.R.Suggestions, related...)
+	}
+
+	for _, rel := range related {
+		if rel.R == nil {
+			rel.R = &suggestionR{
+				Player: o,
+			}
+		} else {
+			rel.R.Player = o
+		}
+	}
+	return nil
+}
+
+// SetSuggestions removes all previously related items of the
+// player replacing them completely with the passed
+// in related items, optionally inserting them as new records.
+// Sets o.R.Player's Suggestions accordingly.
+// Replaces o.R.Suggestions with related.
+// Sets related.R.Player's Suggestions accordingly.
+func (o *Player) SetSuggestions(exec boil.Executor, insert bool, related ...*Suggestion) error {
+	query := "update `suggestions` set `player_id` = null where `player_id` = ?"
+	values := []interface{}{o.ID}
+	if boil.DebugMode {
+		fmt.Fprintln(boil.DebugWriter, query)
+		fmt.Fprintln(boil.DebugWriter, values)
+	}
+	_, err := exec.Exec(query, values...)
+	if err != nil {
+		return errors.Wrap(err, "failed to remove relationships before set")
+	}
+
+	if o.R != nil {
+		for _, rel := range o.R.Suggestions {
+			queries.SetScanner(&rel.PlayerID, nil)
+			if rel.R == nil {
+				continue
+			}
+
+			rel.R.Player = nil
+		}
+		o.R.Suggestions = nil
+	}
+
+	return o.AddSuggestions(exec, insert, related...)
+}
+
+// RemoveSuggestions relationships from objects passed in.
+// Removes related items from R.Suggestions (uses pointer comparison, removal does not keep order)
+// Sets related.R.Player.
+func (o *Player) RemoveSuggestions(exec boil.Executor, related ...*Suggestion) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	for _, rel := range related {
+		queries.SetScanner(&rel.PlayerID, nil)
+		if rel.R != nil {
+			rel.R.Player = nil
+		}
+		if err = rel.Update(exec, boil.Whitelist("player_id")); err != nil {
+			return err
+		}
+	}
+	if o.R == nil {
+		return nil
+	}
+
+	for _, rel := range related {
+		for i, ri := range o.R.Suggestions {
+			if rel != ri {
+				continue
+			}
+
+			ln := len(o.R.Suggestions)
+			if ln > 1 && i < ln-1 {
+				o.R.Suggestions[i] = o.R.Suggestions[ln-1]
+			}
+			o.R.Suggestions = o.R.Suggestions[:ln-1]
+			break
+		}
+	}
+
 	return nil
 }
 
