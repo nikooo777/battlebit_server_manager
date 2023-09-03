@@ -5,6 +5,7 @@
 // migration/0003_progress_extension.sql (989B)
 // migration/0004_suggestions.sql (813B)
 // migration/0005_progression_fix.sql (2.715kB)
+// migration/0006_stats.sql (456B)
 
 package migration
 
@@ -172,6 +173,26 @@ func migration0005_progression_fixSql() (*asset, error) {
 	return a, nil
 }
 
+var _migration0006_statsSql = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x9c\x91\x31\x6b\xfb\x30\x10\xc5\x77\x7d\x8a\x37\x26\xfc\xff\xd9\x3a\x14\x4a\x06\xc5\xb9\xb4\xa2\xb6\x1c\x64\x19\x9a\x49\x56\x6d\x35\x08\x6a\xc5\x24\xe7\xa1\xdf\xbe\x98\x86\xba\x43\xba\xf4\xa6\xbb\xe3\xde\xef\xc1\xbb\xd5\x0a\xff\xfa\x78\x3c\x7b\x0e\xa8\x07\x21\x7e\xce\x15\x7b\x0e\x7d\x48\xbc\x09\xc7\x98\x44\x66\x48\x5a\x82\x95\x9b\x9c\xa0\x76\xd0\xa5\x05\xbd\xa8\xca\x56\x68\x2e\xec\xf9\xd2\x88\x85\x00\x80\x26\x76\x0d\xe6\x8a\x89\xaf\xdd\xa4\xd0\x75\x9e\x43\xd6\xb6\x74\x4a\x67\x86\x0a\xd2\xf6\xff\x97\x6a\x78\xf7\x1f\xe1\xec\xda\xd3\x98\xb8\xb9\xa1\xba\x9e\xb5\xe7\xe0\x39\x74\xce\xf3\x64\xc2\xb1\x0f\x17\xf6\xfd\x30\xc3\xb7\xb4\x93\x75\x6e\x91\xd5\xc6\x90\xb6\xce\xaa\x82\x2a\x2b\x8b\xfd\x15\x30\x0e\xdd\x1f\x01\x28\x35\xea\xfd\x76\x4a\xe1\x17\xf8\xde\xa8\x42\x9a\x03\x9e\xe9\x80\xc5\x94\xc3\x52\x2c\x41\xfa\x51\x69\xc2\x1a\x2a\xa5\xd3\x76\x23\x30\x3b\x3c\x49\x53\x91\xc5\x1a\x23\xbf\xdd\xf7\xaf\x77\x02\xc8\xca\x3c\x9f\x1c\xbe\x77\x6e\x4c\xb1\x3d\x75\xc1\xb5\xf1\xe1\xf6\x7f\x28\x75\x9f\x01\x00\x00\xff\xff\x52\xc3\xd8\xc2\xc8\x01\x00\x00")
+
+func migration0006_statsSqlBytes() ([]byte, error) {
+	return bindataRead(
+		_migration0006_statsSql,
+		"migration/0006_stats.sql",
+	)
+}
+
+func migration0006_statsSql() (*asset, error) {
+	bytes, err := migration0006_statsSqlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "migration/0006_stats.sql", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0xf, 0xdb, 0xbb, 0xee, 0xc, 0xf8, 0x7, 0xad, 0xfe, 0x29, 0x46, 0xfb, 0x7e, 0x8e, 0x70, 0x8c, 0x2, 0xe3, 0x7e, 0xde, 0x6d, 0xdb, 0x4c, 0xc8, 0x62, 0xf0, 0x74, 0xc4, 0xfe, 0xa8, 0x38, 0x4f}}
+	return a, nil
+}
+
 // Asset loads and returns the asset for the given name.
 // It returns an error if the asset could not be found or
 // could not be loaded.
@@ -268,6 +289,7 @@ var _bindata = map[string]func() (*asset, error){
 	"migration/0003_progress_extension.sql": migration0003_progress_extensionSql,
 	"migration/0004_suggestions.sql":        migration0004_suggestionsSql,
 	"migration/0005_progression_fix.sql":    migration0005_progression_fixSql,
+	"migration/0006_stats.sql":              migration0006_statsSql,
 }
 
 // AssetDebug is true if the assets were built with the debug flag enabled.
@@ -322,6 +344,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"0003_progress_extension.sql": {migration0003_progress_extensionSql, map[string]*bintree{}},
 		"0004_suggestions.sql":        {migration0004_suggestionsSql, map[string]*bintree{}},
 		"0005_progression_fix.sql":    {migration0005_progression_fixSql, map[string]*bintree{}},
+		"0006_stats.sql":              {migration0006_statsSql, map[string]*bintree{}},
 	}},
 }}
 

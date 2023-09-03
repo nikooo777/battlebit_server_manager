@@ -568,7 +568,7 @@ func (playerL) LoadPlayerProgresses(e boil.Executor, singular bool, maybePlayer 
 			}
 
 			for _, a := range args {
-				if queries.Equal(a, obj.ID) {
+				if a == obj.ID {
 					continue Outer
 				}
 			}
@@ -619,7 +619,7 @@ func (playerL) LoadPlayerProgresses(e boil.Executor, singular bool, maybePlayer 
 
 	for _, foreign := range resultSlice {
 		for _, local := range slice {
-			if queries.Equal(local.ID, foreign.PlayerID) {
+			if local.ID == foreign.PlayerID {
 				local.R.PlayerProgresses = append(local.R.PlayerProgresses, foreign)
 				if foreign.R == nil {
 					foreign.R = &playerProgressR{}
@@ -1014,7 +1014,7 @@ func (o *Player) AddPlayerProgresses(exec boil.Executor, insert bool, related ..
 	var err error
 	for _, rel := range related {
 		if insert {
-			queries.Assign(&rel.PlayerID, o.ID)
+			rel.PlayerID = o.ID
 			if err = rel.Insert(exec, boil.Infer()); err != nil {
 				return errors.Wrap(err, "failed to insert into foreign table")
 			}
@@ -1034,7 +1034,7 @@ func (o *Player) AddPlayerProgresses(exec boil.Executor, insert bool, related ..
 				return errors.Wrap(err, "failed to update foreign table")
 			}
 
-			queries.Assign(&rel.PlayerID, o.ID)
+			rel.PlayerID = o.ID
 		}
 	}
 
@@ -1055,79 +1055,6 @@ func (o *Player) AddPlayerProgresses(exec boil.Executor, insert bool, related ..
 			rel.R.Player = o
 		}
 	}
-	return nil
-}
-
-// SetPlayerProgresses removes all previously related items of the
-// player replacing them completely with the passed
-// in related items, optionally inserting them as new records.
-// Sets o.R.Player's PlayerProgresses accordingly.
-// Replaces o.R.PlayerProgresses with related.
-// Sets related.R.Player's PlayerProgresses accordingly.
-func (o *Player) SetPlayerProgresses(exec boil.Executor, insert bool, related ...*PlayerProgress) error {
-	query := "update `player_progress` set `player_id` = null where `player_id` = ?"
-	values := []interface{}{o.ID}
-	if boil.DebugMode {
-		fmt.Fprintln(boil.DebugWriter, query)
-		fmt.Fprintln(boil.DebugWriter, values)
-	}
-	_, err := exec.Exec(query, values...)
-	if err != nil {
-		return errors.Wrap(err, "failed to remove relationships before set")
-	}
-
-	if o.R != nil {
-		for _, rel := range o.R.PlayerProgresses {
-			queries.SetScanner(&rel.PlayerID, nil)
-			if rel.R == nil {
-				continue
-			}
-
-			rel.R.Player = nil
-		}
-		o.R.PlayerProgresses = nil
-	}
-
-	return o.AddPlayerProgresses(exec, insert, related...)
-}
-
-// RemovePlayerProgresses relationships from objects passed in.
-// Removes related items from R.PlayerProgresses (uses pointer comparison, removal does not keep order)
-// Sets related.R.Player.
-func (o *Player) RemovePlayerProgresses(exec boil.Executor, related ...*PlayerProgress) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-	for _, rel := range related {
-		queries.SetScanner(&rel.PlayerID, nil)
-		if rel.R != nil {
-			rel.R.Player = nil
-		}
-		if err = rel.Update(exec, boil.Whitelist("player_id")); err != nil {
-			return err
-		}
-	}
-	if o.R == nil {
-		return nil
-	}
-
-	for _, rel := range related {
-		for i, ri := range o.R.PlayerProgresses {
-			if rel != ri {
-				continue
-			}
-
-			ln := len(o.R.PlayerProgresses)
-			if ln > 1 && i < ln-1 {
-				o.R.PlayerProgresses[i] = o.R.PlayerProgresses[ln-1]
-			}
-			o.R.PlayerProgresses = o.R.PlayerProgresses[:ln-1]
-			break
-		}
-	}
-
 	return nil
 }
 

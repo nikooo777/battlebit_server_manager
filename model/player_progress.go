@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/friendsofgo/errors"
-	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
@@ -23,52 +22,52 @@ import (
 
 // PlayerProgress is an object representing the database table.
 type PlayerProgress struct {
-	ID       int      `boil:"id" json:"id" toml:"id" yaml:"id"`
-	PlayerID null.Int `boil:"player_id" json:"player_id,omitempty" toml:"player_id" yaml:"player_id,omitempty"`
+	ID       int `boil:"id" json:"id" toml:"id" yaml:"id"`
+	PlayerID int `boil:"player_id" json:"player_id" toml:"player_id" yaml:"player_id"`
 	// when 1 it means the stats are from the official game, when 0 it's from our own servers
 	IsOfficial          int8      `boil:"is_official" json:"is_official" toml:"is_official" yaml:"is_official"`
-	KillCount           null.Uint `boil:"kill_count" json:"kill_count,omitempty" toml:"kill_count" yaml:"kill_count,omitempty"`
-	DeathCount          null.Uint `boil:"death_count" json:"death_count,omitempty" toml:"death_count" yaml:"death_count,omitempty"`
-	LeaderKills         null.Uint `boil:"leader_kills" json:"leader_kills,omitempty" toml:"leader_kills" yaml:"leader_kills,omitempty"`
-	AssaultKills        null.Uint `boil:"assault_kills" json:"assault_kills,omitempty" toml:"assault_kills" yaml:"assault_kills,omitempty"`
-	MedicKills          null.Uint `boil:"medic_kills" json:"medic_kills,omitempty" toml:"medic_kills" yaml:"medic_kills,omitempty"`
-	EngineerKills       null.Uint `boil:"engineer_kills" json:"engineer_kills,omitempty" toml:"engineer_kills" yaml:"engineer_kills,omitempty"`
-	SupportKills        null.Uint `boil:"support_kills" json:"support_kills,omitempty" toml:"support_kills" yaml:"support_kills,omitempty"`
-	ReconKills          null.Uint `boil:"recon_kills" json:"recon_kills,omitempty" toml:"recon_kills" yaml:"recon_kills,omitempty"`
-	WinCount            null.Uint `boil:"win_count" json:"win_count,omitempty" toml:"win_count" yaml:"win_count,omitempty"`
-	LoseCount           null.Uint `boil:"lose_count" json:"lose_count,omitempty" toml:"lose_count" yaml:"lose_count,omitempty"`
-	FriendlyShots       null.Uint `boil:"friendly_shots" json:"friendly_shots,omitempty" toml:"friendly_shots" yaml:"friendly_shots,omitempty"`
-	FriendlyKills       null.Uint `boil:"friendly_kills" json:"friendly_kills,omitempty" toml:"friendly_kills" yaml:"friendly_kills,omitempty"`
-	Revived             null.Uint `boil:"revived" json:"revived,omitempty" toml:"revived" yaml:"revived,omitempty"`
-	RevivedTeamMates    null.Uint `boil:"revived_team_mates" json:"revived_team_mates,omitempty" toml:"revived_team_mates" yaml:"revived_team_mates,omitempty"`
-	Assists             null.Uint `boil:"assists" json:"assists,omitempty" toml:"assists" yaml:"assists,omitempty"`
-	Prestige            null.Uint `boil:"prestige" json:"prestige,omitempty" toml:"prestige" yaml:"prestige,omitempty"`
-	CurrentRank         null.Uint `boil:"current_rank" json:"current_rank,omitempty" toml:"current_rank" yaml:"current_rank,omitempty"`
-	Exp                 null.Uint `boil:"exp" json:"exp,omitempty" toml:"exp" yaml:"exp,omitempty"`
-	ShotsFired          null.Uint `boil:"shots_fired" json:"shots_fired,omitempty" toml:"shots_fired" yaml:"shots_fired,omitempty"`
-	ShotsHit            null.Uint `boil:"shots_hit" json:"shots_hit,omitempty" toml:"shots_hit" yaml:"shots_hit,omitempty"`
-	Headshots           null.Uint `boil:"headshots" json:"headshots,omitempty" toml:"headshots" yaml:"headshots,omitempty"`
-	CompletedObjectives null.Uint `boil:"completed_objectives" json:"completed_objectives,omitempty" toml:"completed_objectives" yaml:"completed_objectives,omitempty"`
-	HealedHPS           null.Uint `boil:"healed_hps" json:"healed_hps,omitempty" toml:"healed_hps" yaml:"healed_hps,omitempty"`
-	RoadKills           null.Uint `boil:"road_kills" json:"road_kills,omitempty" toml:"road_kills" yaml:"road_kills,omitempty"`
-	Suicides            null.Uint `boil:"suicides" json:"suicides,omitempty" toml:"suicides" yaml:"suicides,omitempty"`
-	VehiclesDestroyed   null.Uint `boil:"vehicles_destroyed" json:"vehicles_destroyed,omitempty" toml:"vehicles_destroyed" yaml:"vehicles_destroyed,omitempty"`
-	VehicleHPRepaired   null.Uint `boil:"vehicle_hp_repaired" json:"vehicle_hp_repaired,omitempty" toml:"vehicle_hp_repaired" yaml:"vehicle_hp_repaired,omitempty"`
-	LongestKill         null.Uint `boil:"longest_kill" json:"longest_kill,omitempty" toml:"longest_kill" yaml:"longest_kill,omitempty"`
-	PlayTimeSeconds     null.Uint `boil:"play_time_seconds" json:"play_time_seconds,omitempty" toml:"play_time_seconds" yaml:"play_time_seconds,omitempty"`
-	LeaderPlayTime      null.Uint `boil:"leader_play_time" json:"leader_play_time,omitempty" toml:"leader_play_time" yaml:"leader_play_time,omitempty"`
-	AssaultPlayTime     null.Uint `boil:"assault_play_time" json:"assault_play_time,omitempty" toml:"assault_play_time" yaml:"assault_play_time,omitempty"`
-	MedicPlayTime       null.Uint `boil:"medic_play_time" json:"medic_play_time,omitempty" toml:"medic_play_time" yaml:"medic_play_time,omitempty"`
-	EngineerPlayTime    null.Uint `boil:"engineer_play_time" json:"engineer_play_time,omitempty" toml:"engineer_play_time" yaml:"engineer_play_time,omitempty"`
-	SupportPlayTime     null.Uint `boil:"support_play_time" json:"support_play_time,omitempty" toml:"support_play_time" yaml:"support_play_time,omitempty"`
-	ReconPlayTime       null.Uint `boil:"recon_play_time" json:"recon_play_time,omitempty" toml:"recon_play_time" yaml:"recon_play_time,omitempty"`
-	LeaderScore         null.Uint `boil:"leader_score" json:"leader_score,omitempty" toml:"leader_score" yaml:"leader_score,omitempty"`
-	AssaultScore        null.Uint `boil:"assault_score" json:"assault_score,omitempty" toml:"assault_score" yaml:"assault_score,omitempty"`
-	MedicScore          null.Uint `boil:"medic_score" json:"medic_score,omitempty" toml:"medic_score" yaml:"medic_score,omitempty"`
-	EngineerScore       null.Uint `boil:"engineer_score" json:"engineer_score,omitempty" toml:"engineer_score" yaml:"engineer_score,omitempty"`
-	SupportScore        null.Uint `boil:"support_score" json:"support_score,omitempty" toml:"support_score" yaml:"support_score,omitempty"`
-	ReconScore          null.Uint `boil:"recon_score" json:"recon_score,omitempty" toml:"recon_score" yaml:"recon_score,omitempty"`
-	TotalScore          null.Uint `boil:"total_score" json:"total_score,omitempty" toml:"total_score" yaml:"total_score,omitempty"`
+	KillCount           uint      `boil:"kill_count" json:"kill_count" toml:"kill_count" yaml:"kill_count"`
+	DeathCount          uint      `boil:"death_count" json:"death_count" toml:"death_count" yaml:"death_count"`
+	LeaderKills         uint      `boil:"leader_kills" json:"leader_kills" toml:"leader_kills" yaml:"leader_kills"`
+	AssaultKills        uint      `boil:"assault_kills" json:"assault_kills" toml:"assault_kills" yaml:"assault_kills"`
+	MedicKills          uint      `boil:"medic_kills" json:"medic_kills" toml:"medic_kills" yaml:"medic_kills"`
+	EngineerKills       uint      `boil:"engineer_kills" json:"engineer_kills" toml:"engineer_kills" yaml:"engineer_kills"`
+	SupportKills        uint      `boil:"support_kills" json:"support_kills" toml:"support_kills" yaml:"support_kills"`
+	ReconKills          uint      `boil:"recon_kills" json:"recon_kills" toml:"recon_kills" yaml:"recon_kills"`
+	WinCount            uint      `boil:"win_count" json:"win_count" toml:"win_count" yaml:"win_count"`
+	LoseCount           uint      `boil:"lose_count" json:"lose_count" toml:"lose_count" yaml:"lose_count"`
+	FriendlyShots       uint      `boil:"friendly_shots" json:"friendly_shots" toml:"friendly_shots" yaml:"friendly_shots"`
+	FriendlyKills       uint      `boil:"friendly_kills" json:"friendly_kills" toml:"friendly_kills" yaml:"friendly_kills"`
+	Revived             uint      `boil:"revived" json:"revived" toml:"revived" yaml:"revived"`
+	RevivedTeamMates    uint      `boil:"revived_team_mates" json:"revived_team_mates" toml:"revived_team_mates" yaml:"revived_team_mates"`
+	Assists             uint      `boil:"assists" json:"assists" toml:"assists" yaml:"assists"`
+	Prestige            uint      `boil:"prestige" json:"prestige" toml:"prestige" yaml:"prestige"`
+	CurrentRank         uint      `boil:"current_rank" json:"current_rank" toml:"current_rank" yaml:"current_rank"`
+	Exp                 uint      `boil:"exp" json:"exp" toml:"exp" yaml:"exp"`
+	ShotsFired          uint      `boil:"shots_fired" json:"shots_fired" toml:"shots_fired" yaml:"shots_fired"`
+	ShotsHit            uint      `boil:"shots_hit" json:"shots_hit" toml:"shots_hit" yaml:"shots_hit"`
+	Headshots           uint      `boil:"headshots" json:"headshots" toml:"headshots" yaml:"headshots"`
+	CompletedObjectives uint      `boil:"completed_objectives" json:"completed_objectives" toml:"completed_objectives" yaml:"completed_objectives"`
+	HealedHPS           uint      `boil:"healed_hps" json:"healed_hps" toml:"healed_hps" yaml:"healed_hps"`
+	RoadKills           uint      `boil:"road_kills" json:"road_kills" toml:"road_kills" yaml:"road_kills"`
+	Suicides            uint      `boil:"suicides" json:"suicides" toml:"suicides" yaml:"suicides"`
+	VehiclesDestroyed   uint      `boil:"vehicles_destroyed" json:"vehicles_destroyed" toml:"vehicles_destroyed" yaml:"vehicles_destroyed"`
+	VehicleHPRepaired   uint      `boil:"vehicle_hp_repaired" json:"vehicle_hp_repaired" toml:"vehicle_hp_repaired" yaml:"vehicle_hp_repaired"`
+	LongestKill         uint      `boil:"longest_kill" json:"longest_kill" toml:"longest_kill" yaml:"longest_kill"`
+	PlayTimeSeconds     uint      `boil:"play_time_seconds" json:"play_time_seconds" toml:"play_time_seconds" yaml:"play_time_seconds"`
+	LeaderPlayTime      uint      `boil:"leader_play_time" json:"leader_play_time" toml:"leader_play_time" yaml:"leader_play_time"`
+	AssaultPlayTime     uint      `boil:"assault_play_time" json:"assault_play_time" toml:"assault_play_time" yaml:"assault_play_time"`
+	MedicPlayTime       uint      `boil:"medic_play_time" json:"medic_play_time" toml:"medic_play_time" yaml:"medic_play_time"`
+	EngineerPlayTime    uint      `boil:"engineer_play_time" json:"engineer_play_time" toml:"engineer_play_time" yaml:"engineer_play_time"`
+	SupportPlayTime     uint      `boil:"support_play_time" json:"support_play_time" toml:"support_play_time" yaml:"support_play_time"`
+	ReconPlayTime       uint      `boil:"recon_play_time" json:"recon_play_time" toml:"recon_play_time" yaml:"recon_play_time"`
+	LeaderScore         uint      `boil:"leader_score" json:"leader_score" toml:"leader_score" yaml:"leader_score"`
+	AssaultScore        uint      `boil:"assault_score" json:"assault_score" toml:"assault_score" yaml:"assault_score"`
+	MedicScore          uint      `boil:"medic_score" json:"medic_score" toml:"medic_score" yaml:"medic_score"`
+	EngineerScore       uint      `boil:"engineer_score" json:"engineer_score" toml:"engineer_score" yaml:"engineer_score"`
+	SupportScore        uint      `boil:"support_score" json:"support_score" toml:"support_score" yaml:"support_score"`
+	ReconScore          uint      `boil:"recon_score" json:"recon_score" toml:"recon_score" yaml:"recon_score"`
+	TotalScore          uint      `boil:"total_score" json:"total_score" toml:"total_score" yaml:"total_score"`
 	CreatedAt           time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt           time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 
@@ -297,34 +296,22 @@ func (w whereHelperint8) NIN(slice []int8) qm.QueryMod {
 	return qm.WhereNotIn(fmt.Sprintf("%s NOT IN ?", w.field), values...)
 }
 
-type whereHelpernull_Uint struct{ field string }
+type whereHelperuint struct{ field string }
 
-func (w whereHelpernull_Uint) EQ(x null.Uint) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, false, x)
-}
-func (w whereHelpernull_Uint) NEQ(x null.Uint) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, true, x)
-}
-func (w whereHelpernull_Uint) LT(x null.Uint) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LT, x)
-}
-func (w whereHelpernull_Uint) LTE(x null.Uint) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LTE, x)
-}
-func (w whereHelpernull_Uint) GT(x null.Uint) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GT, x)
-}
-func (w whereHelpernull_Uint) GTE(x null.Uint) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GTE, x)
-}
-func (w whereHelpernull_Uint) IN(slice []uint) qm.QueryMod {
+func (w whereHelperuint) EQ(x uint) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
+func (w whereHelperuint) NEQ(x uint) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
+func (w whereHelperuint) LT(x uint) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
+func (w whereHelperuint) LTE(x uint) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
+func (w whereHelperuint) GT(x uint) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
+func (w whereHelperuint) GTE(x uint) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
+func (w whereHelperuint) IN(slice []uint) qm.QueryMod {
 	values := make([]interface{}, 0, len(slice))
 	for _, value := range slice {
 		values = append(values, value)
 	}
 	return qm.WhereIn(fmt.Sprintf("%s IN ?", w.field), values...)
 }
-func (w whereHelpernull_Uint) NIN(slice []uint) qm.QueryMod {
+func (w whereHelperuint) NIN(slice []uint) qm.QueryMod {
 	values := make([]interface{}, 0, len(slice))
 	for _, value := range slice {
 		values = append(values, value)
@@ -332,103 +319,100 @@ func (w whereHelpernull_Uint) NIN(slice []uint) qm.QueryMod {
 	return qm.WhereNotIn(fmt.Sprintf("%s NOT IN ?", w.field), values...)
 }
 
-func (w whereHelpernull_Uint) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
-func (w whereHelpernull_Uint) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
-
 var PlayerProgressWhere = struct {
 	ID                  whereHelperint
-	PlayerID            whereHelpernull_Int
+	PlayerID            whereHelperint
 	IsOfficial          whereHelperint8
-	KillCount           whereHelpernull_Uint
-	DeathCount          whereHelpernull_Uint
-	LeaderKills         whereHelpernull_Uint
-	AssaultKills        whereHelpernull_Uint
-	MedicKills          whereHelpernull_Uint
-	EngineerKills       whereHelpernull_Uint
-	SupportKills        whereHelpernull_Uint
-	ReconKills          whereHelpernull_Uint
-	WinCount            whereHelpernull_Uint
-	LoseCount           whereHelpernull_Uint
-	FriendlyShots       whereHelpernull_Uint
-	FriendlyKills       whereHelpernull_Uint
-	Revived             whereHelpernull_Uint
-	RevivedTeamMates    whereHelpernull_Uint
-	Assists             whereHelpernull_Uint
-	Prestige            whereHelpernull_Uint
-	CurrentRank         whereHelpernull_Uint
-	Exp                 whereHelpernull_Uint
-	ShotsFired          whereHelpernull_Uint
-	ShotsHit            whereHelpernull_Uint
-	Headshots           whereHelpernull_Uint
-	CompletedObjectives whereHelpernull_Uint
-	HealedHPS           whereHelpernull_Uint
-	RoadKills           whereHelpernull_Uint
-	Suicides            whereHelpernull_Uint
-	VehiclesDestroyed   whereHelpernull_Uint
-	VehicleHPRepaired   whereHelpernull_Uint
-	LongestKill         whereHelpernull_Uint
-	PlayTimeSeconds     whereHelpernull_Uint
-	LeaderPlayTime      whereHelpernull_Uint
-	AssaultPlayTime     whereHelpernull_Uint
-	MedicPlayTime       whereHelpernull_Uint
-	EngineerPlayTime    whereHelpernull_Uint
-	SupportPlayTime     whereHelpernull_Uint
-	ReconPlayTime       whereHelpernull_Uint
-	LeaderScore         whereHelpernull_Uint
-	AssaultScore        whereHelpernull_Uint
-	MedicScore          whereHelpernull_Uint
-	EngineerScore       whereHelpernull_Uint
-	SupportScore        whereHelpernull_Uint
-	ReconScore          whereHelpernull_Uint
-	TotalScore          whereHelpernull_Uint
+	KillCount           whereHelperuint
+	DeathCount          whereHelperuint
+	LeaderKills         whereHelperuint
+	AssaultKills        whereHelperuint
+	MedicKills          whereHelperuint
+	EngineerKills       whereHelperuint
+	SupportKills        whereHelperuint
+	ReconKills          whereHelperuint
+	WinCount            whereHelperuint
+	LoseCount           whereHelperuint
+	FriendlyShots       whereHelperuint
+	FriendlyKills       whereHelperuint
+	Revived             whereHelperuint
+	RevivedTeamMates    whereHelperuint
+	Assists             whereHelperuint
+	Prestige            whereHelperuint
+	CurrentRank         whereHelperuint
+	Exp                 whereHelperuint
+	ShotsFired          whereHelperuint
+	ShotsHit            whereHelperuint
+	Headshots           whereHelperuint
+	CompletedObjectives whereHelperuint
+	HealedHPS           whereHelperuint
+	RoadKills           whereHelperuint
+	Suicides            whereHelperuint
+	VehiclesDestroyed   whereHelperuint
+	VehicleHPRepaired   whereHelperuint
+	LongestKill         whereHelperuint
+	PlayTimeSeconds     whereHelperuint
+	LeaderPlayTime      whereHelperuint
+	AssaultPlayTime     whereHelperuint
+	MedicPlayTime       whereHelperuint
+	EngineerPlayTime    whereHelperuint
+	SupportPlayTime     whereHelperuint
+	ReconPlayTime       whereHelperuint
+	LeaderScore         whereHelperuint
+	AssaultScore        whereHelperuint
+	MedicScore          whereHelperuint
+	EngineerScore       whereHelperuint
+	SupportScore        whereHelperuint
+	ReconScore          whereHelperuint
+	TotalScore          whereHelperuint
 	CreatedAt           whereHelpertime_Time
 	UpdatedAt           whereHelpertime_Time
 }{
 	ID:                  whereHelperint{field: "`player_progress`.`id`"},
-	PlayerID:            whereHelpernull_Int{field: "`player_progress`.`player_id`"},
+	PlayerID:            whereHelperint{field: "`player_progress`.`player_id`"},
 	IsOfficial:          whereHelperint8{field: "`player_progress`.`is_official`"},
-	KillCount:           whereHelpernull_Uint{field: "`player_progress`.`kill_count`"},
-	DeathCount:          whereHelpernull_Uint{field: "`player_progress`.`death_count`"},
-	LeaderKills:         whereHelpernull_Uint{field: "`player_progress`.`leader_kills`"},
-	AssaultKills:        whereHelpernull_Uint{field: "`player_progress`.`assault_kills`"},
-	MedicKills:          whereHelpernull_Uint{field: "`player_progress`.`medic_kills`"},
-	EngineerKills:       whereHelpernull_Uint{field: "`player_progress`.`engineer_kills`"},
-	SupportKills:        whereHelpernull_Uint{field: "`player_progress`.`support_kills`"},
-	ReconKills:          whereHelpernull_Uint{field: "`player_progress`.`recon_kills`"},
-	WinCount:            whereHelpernull_Uint{field: "`player_progress`.`win_count`"},
-	LoseCount:           whereHelpernull_Uint{field: "`player_progress`.`lose_count`"},
-	FriendlyShots:       whereHelpernull_Uint{field: "`player_progress`.`friendly_shots`"},
-	FriendlyKills:       whereHelpernull_Uint{field: "`player_progress`.`friendly_kills`"},
-	Revived:             whereHelpernull_Uint{field: "`player_progress`.`revived`"},
-	RevivedTeamMates:    whereHelpernull_Uint{field: "`player_progress`.`revived_team_mates`"},
-	Assists:             whereHelpernull_Uint{field: "`player_progress`.`assists`"},
-	Prestige:            whereHelpernull_Uint{field: "`player_progress`.`prestige`"},
-	CurrentRank:         whereHelpernull_Uint{field: "`player_progress`.`current_rank`"},
-	Exp:                 whereHelpernull_Uint{field: "`player_progress`.`exp`"},
-	ShotsFired:          whereHelpernull_Uint{field: "`player_progress`.`shots_fired`"},
-	ShotsHit:            whereHelpernull_Uint{field: "`player_progress`.`shots_hit`"},
-	Headshots:           whereHelpernull_Uint{field: "`player_progress`.`headshots`"},
-	CompletedObjectives: whereHelpernull_Uint{field: "`player_progress`.`completed_objectives`"},
-	HealedHPS:           whereHelpernull_Uint{field: "`player_progress`.`healed_hps`"},
-	RoadKills:           whereHelpernull_Uint{field: "`player_progress`.`road_kills`"},
-	Suicides:            whereHelpernull_Uint{field: "`player_progress`.`suicides`"},
-	VehiclesDestroyed:   whereHelpernull_Uint{field: "`player_progress`.`vehicles_destroyed`"},
-	VehicleHPRepaired:   whereHelpernull_Uint{field: "`player_progress`.`vehicle_hp_repaired`"},
-	LongestKill:         whereHelpernull_Uint{field: "`player_progress`.`longest_kill`"},
-	PlayTimeSeconds:     whereHelpernull_Uint{field: "`player_progress`.`play_time_seconds`"},
-	LeaderPlayTime:      whereHelpernull_Uint{field: "`player_progress`.`leader_play_time`"},
-	AssaultPlayTime:     whereHelpernull_Uint{field: "`player_progress`.`assault_play_time`"},
-	MedicPlayTime:       whereHelpernull_Uint{field: "`player_progress`.`medic_play_time`"},
-	EngineerPlayTime:    whereHelpernull_Uint{field: "`player_progress`.`engineer_play_time`"},
-	SupportPlayTime:     whereHelpernull_Uint{field: "`player_progress`.`support_play_time`"},
-	ReconPlayTime:       whereHelpernull_Uint{field: "`player_progress`.`recon_play_time`"},
-	LeaderScore:         whereHelpernull_Uint{field: "`player_progress`.`leader_score`"},
-	AssaultScore:        whereHelpernull_Uint{field: "`player_progress`.`assault_score`"},
-	MedicScore:          whereHelpernull_Uint{field: "`player_progress`.`medic_score`"},
-	EngineerScore:       whereHelpernull_Uint{field: "`player_progress`.`engineer_score`"},
-	SupportScore:        whereHelpernull_Uint{field: "`player_progress`.`support_score`"},
-	ReconScore:          whereHelpernull_Uint{field: "`player_progress`.`recon_score`"},
-	TotalScore:          whereHelpernull_Uint{field: "`player_progress`.`total_score`"},
+	KillCount:           whereHelperuint{field: "`player_progress`.`kill_count`"},
+	DeathCount:          whereHelperuint{field: "`player_progress`.`death_count`"},
+	LeaderKills:         whereHelperuint{field: "`player_progress`.`leader_kills`"},
+	AssaultKills:        whereHelperuint{field: "`player_progress`.`assault_kills`"},
+	MedicKills:          whereHelperuint{field: "`player_progress`.`medic_kills`"},
+	EngineerKills:       whereHelperuint{field: "`player_progress`.`engineer_kills`"},
+	SupportKills:        whereHelperuint{field: "`player_progress`.`support_kills`"},
+	ReconKills:          whereHelperuint{field: "`player_progress`.`recon_kills`"},
+	WinCount:            whereHelperuint{field: "`player_progress`.`win_count`"},
+	LoseCount:           whereHelperuint{field: "`player_progress`.`lose_count`"},
+	FriendlyShots:       whereHelperuint{field: "`player_progress`.`friendly_shots`"},
+	FriendlyKills:       whereHelperuint{field: "`player_progress`.`friendly_kills`"},
+	Revived:             whereHelperuint{field: "`player_progress`.`revived`"},
+	RevivedTeamMates:    whereHelperuint{field: "`player_progress`.`revived_team_mates`"},
+	Assists:             whereHelperuint{field: "`player_progress`.`assists`"},
+	Prestige:            whereHelperuint{field: "`player_progress`.`prestige`"},
+	CurrentRank:         whereHelperuint{field: "`player_progress`.`current_rank`"},
+	Exp:                 whereHelperuint{field: "`player_progress`.`exp`"},
+	ShotsFired:          whereHelperuint{field: "`player_progress`.`shots_fired`"},
+	ShotsHit:            whereHelperuint{field: "`player_progress`.`shots_hit`"},
+	Headshots:           whereHelperuint{field: "`player_progress`.`headshots`"},
+	CompletedObjectives: whereHelperuint{field: "`player_progress`.`completed_objectives`"},
+	HealedHPS:           whereHelperuint{field: "`player_progress`.`healed_hps`"},
+	RoadKills:           whereHelperuint{field: "`player_progress`.`road_kills`"},
+	Suicides:            whereHelperuint{field: "`player_progress`.`suicides`"},
+	VehiclesDestroyed:   whereHelperuint{field: "`player_progress`.`vehicles_destroyed`"},
+	VehicleHPRepaired:   whereHelperuint{field: "`player_progress`.`vehicle_hp_repaired`"},
+	LongestKill:         whereHelperuint{field: "`player_progress`.`longest_kill`"},
+	PlayTimeSeconds:     whereHelperuint{field: "`player_progress`.`play_time_seconds`"},
+	LeaderPlayTime:      whereHelperuint{field: "`player_progress`.`leader_play_time`"},
+	AssaultPlayTime:     whereHelperuint{field: "`player_progress`.`assault_play_time`"},
+	MedicPlayTime:       whereHelperuint{field: "`player_progress`.`medic_play_time`"},
+	EngineerPlayTime:    whereHelperuint{field: "`player_progress`.`engineer_play_time`"},
+	SupportPlayTime:     whereHelperuint{field: "`player_progress`.`support_play_time`"},
+	ReconPlayTime:       whereHelperuint{field: "`player_progress`.`recon_play_time`"},
+	LeaderScore:         whereHelperuint{field: "`player_progress`.`leader_score`"},
+	AssaultScore:        whereHelperuint{field: "`player_progress`.`assault_score`"},
+	MedicScore:          whereHelperuint{field: "`player_progress`.`medic_score`"},
+	EngineerScore:       whereHelperuint{field: "`player_progress`.`engineer_score`"},
+	SupportScore:        whereHelperuint{field: "`player_progress`.`support_score`"},
+	ReconScore:          whereHelperuint{field: "`player_progress`.`recon_score`"},
+	TotalScore:          whereHelperuint{field: "`player_progress`.`total_score`"},
 	CreatedAt:           whereHelpertime_Time{field: "`player_progress`.`created_at`"},
 	UpdatedAt:           whereHelpertime_Time{field: "`player_progress`.`updated_at`"},
 }
@@ -603,9 +587,7 @@ func (playerProgressL) LoadPlayer(e boil.Executor, singular bool, maybePlayerPro
 		if object.R == nil {
 			object.R = &playerProgressR{}
 		}
-		if !queries.IsNil(object.PlayerID) {
-			args = append(args, object.PlayerID)
-		}
+		args = append(args, object.PlayerID)
 
 	} else {
 	Outer:
@@ -615,14 +597,12 @@ func (playerProgressL) LoadPlayer(e boil.Executor, singular bool, maybePlayerPro
 			}
 
 			for _, a := range args {
-				if queries.Equal(a, obj.PlayerID) {
+				if a == obj.PlayerID {
 					continue Outer
 				}
 			}
 
-			if !queries.IsNil(obj.PlayerID) {
-				args = append(args, obj.PlayerID)
-			}
+			args = append(args, obj.PlayerID)
 
 		}
 	}
@@ -672,7 +652,7 @@ func (playerProgressL) LoadPlayer(e boil.Executor, singular bool, maybePlayerPro
 
 	for _, local := range slice {
 		for _, foreign := range resultSlice {
-			if queries.Equal(local.PlayerID, foreign.ID) {
+			if local.PlayerID == foreign.ID {
 				local.R.Player = foreign
 				if foreign.R == nil {
 					foreign.R = &playerR{}
@@ -712,7 +692,7 @@ func (o *PlayerProgress) SetPlayer(exec boil.Executor, insert bool, related *Pla
 		return errors.Wrap(err, "failed to update local table")
 	}
 
-	queries.Assign(&o.PlayerID, related.ID)
+	o.PlayerID = related.ID
 	if o.R == nil {
 		o.R = &playerProgressR{
 			Player: related,
@@ -729,39 +709,6 @@ func (o *PlayerProgress) SetPlayer(exec boil.Executor, insert bool, related *Pla
 		related.R.PlayerProgresses = append(related.R.PlayerProgresses, o)
 	}
 
-	return nil
-}
-
-// RemovePlayer relationship.
-// Sets o.R.Player to nil.
-// Removes o from all passed in related items' relationships struct.
-func (o *PlayerProgress) RemovePlayer(exec boil.Executor, related *Player) error {
-	var err error
-
-	queries.SetScanner(&o.PlayerID, nil)
-	if err = o.Update(exec, boil.Whitelist("player_id")); err != nil {
-		return errors.Wrap(err, "failed to update local table")
-	}
-
-	if o.R != nil {
-		o.R.Player = nil
-	}
-	if related == nil || related.R == nil {
-		return nil
-	}
-
-	for i, ri := range related.R.PlayerProgresses {
-		if queries.Equal(o.PlayerID, ri.PlayerID) {
-			continue
-		}
-
-		ln := len(related.R.PlayerProgresses)
-		if ln > 1 && i < ln-1 {
-			related.R.PlayerProgresses[i] = related.R.PlayerProgresses[ln-1]
-		}
-		related.R.PlayerProgresses = related.R.PlayerProgresses[:ln-1]
-		break
-	}
 	return nil
 }
 
