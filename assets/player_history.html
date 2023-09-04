@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Player Stats</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Dark theme for Bootstrap -->
+    <link href="https://bootswatch.com/4/darkly/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <a class="navbar-brand" href="/">Dashboard</a>
+    <div class="collapse navbar-collapse">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="/chat">Chat Logs</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/reports">Reports</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/bans">Blocks</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/servers">Servers</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/charts">Player Charts</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-header">Player Stats</div>
+        <div class="card-body">
+            <canvas id="playerChart" style="height: 400px;"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Fetching data from the provided API endpoint
+    fetch("/api/player_history")
+        .then(response => response.json())
+        .then(data => {
+            const labels = data.history.map(entry => new Date(entry.date).toLocaleTimeString());
+            const dataPoints = data.history.map(entry => entry.count);
+
+            const ctx = document.getElementById('playerChart').getContext('2d');
+            const chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Player Count',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        data: dataPoints,
+                        fill: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        xAxes: [{
+                            type: 'time',
+                            time: {
+                                unit: 'minute'
+                            }
+                        }],
+                        yAxes: [{
+                            ticks: {
+                                beginAtZero: true
+                            }
+                        }]
+                    }
+                }
+            });
+        })
+        .catch(error => {
+            console.error("There was an error retrieving the data from the API.", error);
+        });
+</script>
+
+</body>
+</html>

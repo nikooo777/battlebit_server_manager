@@ -32,6 +32,75 @@ type chatListResponse struct {
 	NextPageID int       `json:"next_page_id"`
 }
 
+type playerCount struct {
+	Count int       `json:"count"`
+	Date  time.Time `json:"date"`
+}
+type playerHistoryResponse struct {
+	StartDate int64         `json:"start_date"`
+	EndDate   int64         `json:"end_date"`
+	History   []playerCount `json:"history"`
+}
+
+func (s *Server) PlayerHistory(c *gin.Context) {
+	startDateStr := c.Query("start_date")
+	endDateStr := c.Query("end_date")
+
+	startDate := time.Now().AddDate(0, 0, -1)
+	endDate := time.Now()
+
+	if startDateStr != "" {
+		startDateInt, err := strconv.Atoi(startDateStr)
+		if err != nil {
+			_ = c.AbortWithError(http.StatusBadRequest, err)
+			return
+		}
+		startDate = time.Unix(int64(startDateInt), 0)
+	}
+	if endDateStr != "" {
+		endDateInt, err := strconv.Atoi(endDateStr)
+		if err != nil {
+			_ = c.AbortWithError(http.StatusBadRequest, err)
+			return
+		}
+		endDate = time.Unix(int64(endDateInt), 0)
+		if endDate.Before(startDate) {
+			_ = c.AbortWithError(http.StatusBadRequest, fmt.Errorf("end date is before start date"))
+			return
+		}
+		if endDate.After(time.Now()) {
+			endDate = time.Now()
+		}
+	}
+
+	statistics, err := model.Stats(qm.Where(model.StatColumns.CreatedAt+" >= ?", startDate), qm.Where(model.StatColumns.CreatedAt+" <= ?", endDate)).All(boil.GetDB())
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			c.JSONP(http.StatusOK, playerHistoryResponse{
+				StartDate: startDate.Unix(),
+				EndDate:   endDate.Unix(),
+				History:   []playerCount{},
+			})
+			return
+		}
+		_ = c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	history := make([]playerCount, 0, len(statistics))
+	for _, stat := range statistics {
+		history = append(history, playerCount{
+			Count: stat.PlayerCount,
+			Date:  stat.CreatedAt,
+		})
+	}
+	c.JSONP(http.StatusOK, playerHistoryResponse{
+		StartDate: startDate.Unix(),
+		EndDate:   endDate.Unix(),
+		History:   history,
+	})
+}
+
 func (s *Server) ListChat(c *gin.Context) {
 	const pageLimit = 50
 	curPos := 0
@@ -140,6 +209,32 @@ func (s *Server) ListChat(c *gin.Context) {
 		PrevPageID: previousPageID,
 		NextPageID: nextPageID,
 	})
+}
+
+func (s *Server) ChartsPage(c *gin.Context) {
+	session := sessions.Default(c)
+	steamID64 := session.Get("steamid_64")
+	if steamID64 == nil {
+		c.Redirect(http.StatusTemporaryRedirect, "/auth/steam/begin")
+		return
+	}
+	admin, err := s.GetAdmin(steamID64.(int64))
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Failed to check Steam ID")
+		return
+	}
+	if admin == nil {
+		c.String(http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+	logrus.Infof("User %s is logged in, rendering the home page", admin.Name)
+	bytes, err := os.ReadFile("assets/player_history.html")
+	if err != nil {
+		_ = c.AbortWithError(http.StatusInternalServerError, errors.Err(err))
+		return
+	}
+	c.Header("Content-Type", "text/html")
+	c.String(http.StatusOK, string(bytes))
 }
 
 func (s *Server) ChatPage(c *gin.Context) {
