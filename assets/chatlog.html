@@ -26,8 +26,18 @@
         .btn-dark {
             border-color: #404040;
         }
+
+        #contextMenu {
+            display: none;
+            position: absolute;
+            z-index: 1000;
+        }
     </style>
 </head>
+<div class="dropdown-menu" id="contextMenu">
+    <button class="dropdown-item" id="gagOption">Gag Player</button>
+    <button class="dropdown-item" id="banOption">Ban Player</button>
+</div>
 
 <body>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -80,6 +90,69 @@
         </div>
     </div>
 </div>
+<!-- Player Action Modal -->
+<div class="modal fade" id="actionModal" tabindex="-1" role="dialog" aria-labelledby="actionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-white">
+
+            <div class="modal-header bg-secondary">
+                <h5 class="modal-title" id="actionModalLabel">Take Action</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="actionForm">
+                    <div class="form-group">
+                        <label for="reasonInput" class="text-white">Reason:</label>
+                        <input type="text" id="reasonInput" class="form-control bg-dark text-white" placeholder="Enter reason">
+                    </div>
+                    <!-- Duration Type Selector -->
+                    <div class="form-group">
+                        <label for="durationType" class="text-white">Select Duration Type:</label>
+                        <div id="durationType" class="btn-group btn-group-toggle" data-toggle="buttons">
+                            <label class="btn btn-secondary">
+                                <input type="radio" name="durationOptions" id="minutes" autocomplete="off"> Minutes
+                            </label>
+                            <label class="btn btn-secondary">
+                                <input type="radio" name="durationOptions" id="hours" autocomplete="off"> Hours
+                            </label>
+                            <label class="btn btn-secondary">
+                                <input type="radio" name="durationOptions" id="days" autocomplete="off"> Days
+                            </label>
+                            <label class="btn btn-secondary">
+                                <input type="radio" name="durationOptions" id="weeks" autocomplete="off"> Weeks
+                            </label>
+                            <label class="btn btn-secondary">
+                                <input type="radio" name="durationOptions" id="months" autocomplete="off"> Months
+                            </label>
+                            <label class="btn btn-secondary">
+                                <input type="radio" name="durationOptions" id="permanent" autocomplete="off"> Permanent
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Specific Duration Selector -->
+                    <div class="form-group" id="specificDuration" style="display: none;">
+                        <label for="durationValues" class="text-white">Select Duration:</label>
+                        <div class="d-flex align-items-center">
+                            <div id="durationValues" class="btn-group btn-group-toggle mr-3" data-toggle="buttons">
+                                <!-- Predefined values will be populated here -->
+                            </div>
+                            <input type="number" id="customDurationValue" class="form-control bg-dark text-white" placeholder="Custom" style="width: 80px;">
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer bg-secondary">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-danger" id="submitButton">Submit</button>
+            </div>
+
+        </div>
+    </div>
+</div>
 
 <!-- jQuery and Bootstrap JS -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
@@ -115,7 +188,7 @@
                     tdUsername.append(a);
                     row.append(tdUsername, tdMessage, tdTimestamp);
 
-                    row.click(function() {
+                    row.click(function () {
                         const steamID = $(this).data('steamid');
 
                         // Remove highlight from all rows
@@ -127,7 +200,6 @@
 
                     $("#chatLogs").append(row);
                 });
-
 
 
                 next_from = data.next_page_id;
@@ -148,6 +220,56 @@
             });
         }
 
+// Contextual menu (right-click) functionality
+        $("#chatLogs").on("contextmenu", "tr", function (e) {
+            e.preventDefault();
+
+            // Position the menu at the mouse pointer
+            $("#contextMenu").css({
+                top: e.pageY + "px",
+                left: e.pageX + "px"
+            }).show();
+
+            // Set the current steamID to the context menu
+            $("#contextMenu").data('steamid', $(this).data('steamid'));
+        });
+
+// Hide context menu on any other click
+        $(document).click(function () {
+            $("#contextMenu").hide();
+        });
+
+// Handle 'gag' and 'ban' options
+        $("#gagOption, #banOption").click(function () {
+            const action = $(this).text().toLowerCase().trim();
+            $("#actionModalLabel").text(action.charAt(0).toUpperCase() + action.slice(1) + " Player"); // Set the modal title
+
+            $("#contextMenu").hide();  // Hide the context menu
+
+            // Open the modal
+            $("#actionModal").modal('show');
+
+            // On confirm action in the modal
+            $("#confirmAction").off().click(function () {
+                const steamID = $("#contextMenu").data('steamid');
+                const reason = $("#reasonInput").val();
+                const duration = parseInt($("#durationInput").val(), 10);
+
+                if (reason && !isNaN(duration)) {
+                    $.post(`/api/${action}`, {
+                        steamid_64: steamID,
+                        reason: reason,
+                        duration: duration
+                    }, function (response) {
+                        alert(response.message); // assuming your API sends a 'message' in the response
+                        $("#actionModal").modal('hide');  // Close the modal
+                    });
+                } else {
+                    alert('Invalid input. Please try again.');
+                }
+            });
+        });
+
         $("#filter").click(function () {
             next_from = null;
             prev_from = null;
@@ -163,6 +285,146 @@
             next_from = null;
             fetchData();
         });
+
+        $("#durationType input:radio").change(function () {
+            let options = [];
+            switch ($(this).attr("id")) {
+                case "minutes":
+                    options = ["5", "15", "30", "45"];
+                    break;
+                case "hours":
+                    options = ["1", "2", "5", "12"];
+                    break;
+                case "days":
+                    options = ["1", "3", "7"];
+                    break;
+                case "weeks":
+                    options = ["1", "2", "3"];
+                    break;
+                case "months":
+                    options = ["1", "3", "6"];
+                    break;
+                case "permanent":
+                    options = ["Permanent"];
+                    break;
+            }
+
+            let container = $("#durationValues");
+            container.empty();
+            for (let opt of options) {
+                let label = $('<label class="btn btn-secondary">');
+                let input = $('<input type="radio" name="specificDurationOption" autocomplete="off">');
+                input.val(opt);
+                label.append(input).append(opt);
+                container.append(label);
+            }
+
+            if ($(this).attr("id") === "permanent") {
+                $("#customDurationValue").hide();
+            } else {
+                $("#customDurationValue").show();
+            }
+            $("#specificDuration").show();
+        });
+        $("#submitButton").click(function() {
+            let reason = $("#reasonInput").val();
+            let durationType = $("input[name='durationOptions']:checked").attr('id');
+            let specificDurationValue = $("input[name='specificDurationOption']:checked").val();
+            let customDurationValue = $("#customDurationValue").val();
+            // Extract action type from modal title ("Gag" or "Ban")
+            let actionType = $("#actionModalLabel").text().toLowerCase().includes("gag") ? "gag" : "ban";
+
+            if (!reason) {
+                alert("Please provide a reason.");
+                return;
+            }
+
+            if (!durationType) {
+                alert("Please select a duration type.");
+                return;
+            }
+
+            let finalDuration;  // In minutes
+
+            if (customDurationValue) {
+                // Convert the custom value to minutes based on the duration type.
+                switch (durationType) {
+                    case "minutes":
+                        finalDuration = parseInt(customDurationValue);
+                        break;
+                    case "hours":
+                        finalDuration = parseInt(customDurationValue) * 60;
+                        break;
+                    case "days":
+                        finalDuration = parseInt(customDurationValue) * 24 * 60;
+                        break;
+                    case "weeks":
+                        finalDuration = parseInt(customDurationValue) * 7 * 24 * 60;
+                        break;
+                    case "months":
+                        finalDuration = parseInt(customDurationValue) * 30 * 24 * 60; // assuming an average month is 30 days
+                        break;
+                    case "permanent":
+                        finalDuration = 0;
+                        break;
+                }
+            } else if (specificDurationValue) {
+                // Convert the predefined value to minutes based on the duration type.
+                switch (durationType) {
+                    case "minutes":
+                        finalDuration = parseInt(specificDurationValue);
+                        break;
+                    case "hours":
+                        finalDuration = parseInt(specificDurationValue) * 60;
+                        break;
+                    case "days":
+                        finalDuration = parseInt(specificDurationValue) * 24 * 60;
+                        break;
+                    case "weeks":
+                        finalDuration = parseInt(specificDurationValue) * 7 * 24 * 60;
+                        break;
+                    case "months":
+                        finalDuration = parseInt(specificDurationValue) * 30 * 24 * 60;
+                        break;
+                    case "permanent":
+                        finalDuration = 0;
+                        break;
+                }
+            } else {
+                alert("Please select a duration or provide a custom value.");
+                return;
+            }
+            console.log("Reason:", reason);
+            console.log("Duration Type:", durationType);
+            console.log("Duration:", finalDuration);
+            console.log("Action Type:", actionType);
+            alert("this is not implemented yet but the data would be sent to the server like this:" +
+                "\n\nReason: " + reason +
+                "\nSelected Duration Type: " + durationType +
+                "\nTrasmitted Duration (mins): " + finalDuration +
+                "\nAction Type: " + actionType);
+            /*
+            $.ajax({
+                url: `/api/${actionType}`,
+                type: "POST",
+                data: {
+                    duration: finalDuration,
+                    reason: reason
+                },
+                success: function(response) {
+                    // Handle success.
+                    console.log(response);
+                },
+                error: function(error) {
+                    // Handle error.
+                    console.error(error);
+                }
+            });
+*/
+            // Close the modal after processing
+            $('#actionModal').modal('hide');
+        });
+
 
         // Initial data fetch
         fetchData();
