@@ -36,56 +36,86 @@
 </nav>
 <div class="container mt-5">
     <div class="card">
-        <div class="card-header">Player Stats</div>
+        <div class="card-header">Player Stats: 24 hours</div>
         <div class="card-body">
-            <canvas id="playerChart" style="height: 400px;"></canvas>
+            <canvas id="playerChart24" style="height: 400px;"></canvas>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">Player Stats: 3 days</div>
+        <div class="card-body">
+            <canvas id="playerChart72" style="height: 400px;"></canvas>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">Player Stats: 1 week</div>
+        <div class="card-body">
+            <canvas id="playerChart7" style="height: 400px;"></canvas>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">Player Stats: 1 month</div>
+        <div class="card-body">
+            <canvas id="playerChart30" style="height: 400px;"></canvas>
         </div>
     </div>
 </div>
 <script>
     // Fetching data from the provided API endpoint
-    fetch("/api/player_history")
-        .then(response => response.json())
-        .then(data => {
-            const labels = data.history.map(entry => new Date(entry.date).toLocaleTimeString());
-            const dataPoints = data.history.map(entry => entry.count);
+    //times in unix timestamp
+    const oneDayAgo = Math.floor(Date.now() / 1000) - 86400;
+    const threeDaysAgo = Math.floor(Date.now() / 1000) - 259200;
+    const sevenDaysAgo = Math.floor(Date.now() / 1000) - 604800;
+    const thirtyDaysAgo = Math.floor(Date.now() / 1000) - 2592000;
+    const allOptions = {
+        oneDayAgo: {id: "playerChart24", timestamp: oneDayAgo},
+        threeDaysAgo: {id: "playerChart72", timestamp: threeDaysAgo},
+        sevenDaysAgo: {id: "playerChart7", timestamp: sevenDaysAgo},
+        thirtyDaysAgo: {id: "playerChart30", timestamp: thirtyDaysAgo}
+    };
+    for (const option in allOptions) {
+        fetch("/api/player_history?start_date=" + allOptions[option].timestamp)
+            .then(response => response.json())
+            .then(data => {
+                const labels = data.history.map(entry => new Date(entry.date).toLocaleTimeString());
+                const dataPoints = data.history.map(entry => entry.count);
 
-            const ctx = document.getElementById('playerChart').getContext('2d');
-            const chart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Player Count',
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        data: dataPoints,
-                        fill: false,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        xAxes: [{
-                            type: 'time',
-                            time: {
-                                unit: 'minute'
-                            }
-                        }],
-                        yAxes: [{
-                            ticks: {
-                                beginAtZero: true
-                            }
+                const ctx = document.getElementById(allOptions[option].id).getContext('2d');
+                const chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Player Count',
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            data: dataPoints,
+                            fill: false,
                         }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            xAxes: [{
+                                type: 'time',
+                                time: {
+                                    unit: 'minute'
+                                }
+                            }],
+                            yAxes: [{
+                                ticks: {
+                                    beginAtZero: true
+                                }
+                            }]
+                        }
                     }
-                }
+                });
+            })
+            .catch(error => {
+                console.error("There was an error retrieving the data from the API.", error);
             });
-        })
-        .catch(error => {
-            console.error("There was an error retrieving the data from the API.", error);
-        });
+    }
 </script>
-
 </body>
 </html>
