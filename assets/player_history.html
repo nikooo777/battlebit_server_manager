@@ -77,7 +77,15 @@
         fetch("/api/player_history?start_date=" + allOptions[option].timestamp)
             .then(response => response.json())
             .then(data => {
-                const labels = data.history.map(entry => new Date(entry.date).toLocaleTimeString());
+                const labels = data.history.map(entry => {
+                    const date = new Date(entry.date);
+                    const YYYY = date.getFullYear();
+                    const MM = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-based, so +1
+                    const DD = String(date.getDate()).padStart(2, '0');
+                    const HH = String(date.getHours()).padStart(2, '0');
+                    const mm = String(date.getMinutes()).padStart(2, '0');
+                    return `${YYYY}-${MM}-${DD}T${HH}:${mm}`;
+                });
                 const dataPoints = data.history.map(entry => entry.count);
 
                 const ctx = document.getElementById(allOptions[option].id).getContext('2d');
@@ -90,25 +98,12 @@
                             backgroundColor: 'rgba(75, 192, 192, 0.2)',
                             borderColor: 'rgba(75, 192, 192, 1)',
                             data: dataPoints,
-                            fill: false,
+                            fill: true,
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        scales: {
-                            xAxes: [{
-                                type: 'time',
-                                time: {
-                                    unit: 'minute'
-                                }
-                            }],
-                            yAxes: [{
-                                ticks: {
-                                    beginAtZero: true
-                                }
-                            }]
-                        }
                     }
                 });
             })

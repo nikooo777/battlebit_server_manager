@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports Table</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.min.js"></script>
+    <style>
+        body {
+            background-color: #121212;
+            color: #FFFFFF;
+        }
+
+        .table-dark {
+            color: #FFFFFF;
+            background-color: #242424;
+        }
+
+        .table-dark th, .table-dark td, .table-dark thead th {
+            border-color: #404040;
+        }
+
+        .btn-dark {
+            border-color: #404040;
+        }
+
+        #contextMenu {
+            display: none;
+            position: absolute;
+            z-index: 1000;
+        }
+    </style>
+</head>
+
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <a class="navbar-brand" href="/">Dashboard</a>
+    <div class="collapse navbar-collapse">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="/chat">Chat Logs</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/reports">Reports</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/bans">Blocks</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/servers">Servers</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/charts">Player Charts</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+<div class="container mt-4">
+    <table class="table table-dark">
+        <thead>
+        <tr>
+            <th>Reported Player</th>
+            <th>Reporter Player</th>
+            <th>Reason</th>
+            <th>Reported At</th>
+            <th>Status</th>
+            <th></th> <!-- This is for the expand button -->
+        </tr>
+        </thead>
+        <tbody id="tableBody">
+        <!-- Data will be populated here from the AJAX request -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    $.ajax({
+        url: '/api/reports',
+        type: 'GET',
+        dataType: 'json',
+        success: function (data) {
+            populateTable(data);
+        },
+        error: function (xhr, status, error) {
+            console.error('AJAX error. Status:', status, 'Error:', error);
+        }
+    });
+
+
+    function populateTable(data) {
+        let tableBody = $("#tableBody");
+
+        $.each(data.reports, function (index, report) {  // Notice 'reports' with a small 'r'
+            let row = `<tr data-toggle="collapse" data-target="#chatLog${index}" class="accordion-toggle">
+                        <td>${report.reported_player.name}</td>
+                        <td>${report.reporter_player.name}</td>
+                        <td>${report.reason}</td>
+                        <td>${report.reported_at}</td>
+                        <td>${report.status}</td>
+                        <td>`;
+            if (report.related_chat_logs && report.related_chat_logs.length > 0) {
+                row += `<button class="btn btn-dark" data-toggle="collapse" data-target="#chatLog${index}">View Logs</button>`;
+            }
+            row += `</td></tr>`;
+
+            if (report.related_chat_logs && report.related_chat_logs.length > 0) {
+                row += `<tr>
+                        <td colspan="6" class="hiddenRow">
+                            <div class="accordion-body collapse" id="chatLog${index}">`;
+                $.each(report.related_chat_logs, function (logIndex, log) {
+                    row += `<p>${log}</p>`;
+                });
+                row += `</div></td></tr>`;
+            }
+
+            tableBody.append(row);
+        });
+    }
+
+</script>
+</body>
+
+</html>

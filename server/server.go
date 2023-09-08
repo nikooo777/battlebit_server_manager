@@ -59,7 +59,9 @@ func (s *Server) Start(address string) error {
 	router.GET("/", s.HomePage)
 	router.GET("/chat", s.ChatPage)
 	router.GET("/charts", s.ChartsPage)
+	router.GET("/reports", s.ReportsPage)
 	router.GET("/api/chat", s.ListChat)
+	router.GET("/api/reports", s.ListReports)
 	router.GET("/api/player_history", s.PlayerHistory)
 	router.GET("/auth/:provider/begin", func(c *gin.Context) {
 		fn := gothic.GetProviderName

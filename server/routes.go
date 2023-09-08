@@ -7,6 +7,7 @@ import (
 	"os"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"battlebit_admin_panel/model"
@@ -26,10 +27,13 @@ type chatLog struct {
 	Timestamp time.Time `json:"timestamp"`
 }
 
+type pagination struct {
+	PrevPageID int `json:"prev_page_id"`
+	NextPageID int `json:"next_page_id"`
+}
 type chatListResponse struct {
-	Logs       []chatLog `json:"logs"`
-	PrevPageID int       `json:"prev_page_id"`
-	NextPageID int       `json:"next_page_id"`
+	Logs []chatLog `json:"logs"`
+	pagination
 }
 
 type playerCount struct {
@@ -101,8 +105,162 @@ func (s *Server) PlayerHistory(c *gin.Context) {
 	})
 }
 
-func (s *Server) ListChat(c *gin.Context) {
+type listReportResponse struct {
+	Reports []report `json:"reports"`
+	pagination
+}
+
+type reportPlayerDetails struct {
+	SteamID64 string `json:"steamid_64"`
+	Name      string `json:"name"`
+}
+type report struct {
+	ReportedPlayer  reportPlayerDetails `json:"reported_player"`
+	ReporterPlayer  reportPlayerDetails `json:"reporter_player"`
+	Reason          string              `json:"reason"`
+	ReportedAt      time.Time           `json:"reported_at"`
+	RelatedChatLogs []string            `json:"related_chat_logs"`
+	Status          string              `json:"status"`
+}
+
+func (s *Server) ListReports(c *gin.Context) {
 	const pageLimit = 50
+	curPos := 0
+	nextFrom := c.Query("next_from")
+	prevFrom := c.Query("prev_from")
+	playerID := c.Query("player_id")
+
+	var err error
+	if nextFrom != "" {
+		curPos, err = strconv.Atoi(nextFrom)
+		if err != nil {
+			_ = c.AbortWithError(http.StatusBadRequest, err)
+			return
+		}
+	}
+	if prevFrom != "" {
+		curPos, err = strconv.Atoi(prevFrom)
+		if err != nil {
+			_ = c.AbortWithError(http.StatusBadRequest, err)
+			return
+		}
+	}
+
+	queryFilters := make([]qm.QueryMod, 0)
+	if curPos != 0 {
+		if nextFrom != "" {
+			queryFilters = append(queryFilters, qm.Where(model.PlayerReportColumns.ID+" <= ?", curPos), qm.OrderBy(model.PlayerReportColumns.ID+" DESC"))
+		} else {
+			queryFilters = append(queryFilters, qm.Where(model.PlayerReportColumns.ID+" >= ?", curPos), qm.OrderBy(model.PlayerReportColumns.ID+" ASC"))
+		}
+	} else {
+		queryFilters = append(queryFilters, qm.OrderBy(model.PlayerReportColumns.ID+" DESC"))
+	}
+	var reportedPlayerFilter *model.Player
+	if playerID != "" {
+		reportedPlayerFilter, err = model.Players(qm.Where(model.PlayerColumns.SteamID+" = ?", playerID)).One(boil.GetDB())
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				c.JSONP(http.StatusOK, listReportResponse{})
+				return
+			}
+			_ = c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+		queryFilters = append(queryFilters, qm.Where(model.PlayerReportColumns.ReportedPlayerID+" = ?", reportedPlayerFilter.ID))
+	}
+	queryFilters = append(queryFilters, qm.Limit(pageLimit), qm.Load("ReportedPlayer"), qm.Load("Reporter"))
+	reports, err := model.PlayerReports(queryFilters...).All(boil.GetDB())
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			c.JSONP(http.StatusOK, listReportResponse{})
+			return
+		}
+		_ = c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	var reportsList []report
+
+	lastID := 0
+	firstId := -1
+	sort.Slice(reports, func(i, j int) bool {
+		return reports[i].ID > reports[j].ID
+	})
+	for _, r := range reports {
+		relatedChat := make([]string, 0)
+		if strings.Contains(r.Reason, "_Text") {
+			chat, err := r.R.ReportedPlayer.ChatLogs(qm.Where(model.ChatLogColumns.Timestamp+" BETWEEN ? AND ?", r.Timestamp.Add(-time.Minute*5), r.Timestamp.Add(time.Minute*5))).All(boil.GetDB())
+			if err != nil {
+				if !errors.Is(err, sql.ErrNoRows) {
+					_ = c.AbortWithError(http.StatusInternalServerError, err)
+					return
+				}
+			}
+			for _, c := range chat {
+				relatedChat = append(relatedChat, c.Message)
+			}
+
+		}
+		reportsList = append(reportsList, report{
+			ReportedPlayer: reportPlayerDetails{
+				SteamID64: fmt.Sprintf("%d", r.R.ReportedPlayer.SteamID),
+				Name:      r.R.ReportedPlayer.Name,
+			},
+			ReporterPlayer: reportPlayerDetails{
+				SteamID64: fmt.Sprintf("%d", r.R.Reporter.SteamID),
+				Name:      r.R.Reporter.Name,
+			},
+			Reason:          r.Reason,
+			ReportedAt:      r.Timestamp,
+			RelatedChatLogs: relatedChat,
+			Status:          r.Status,
+		})
+		lastID = r.ID
+		if firstId == -1 {
+			firstId = r.ID
+		}
+	}
+	nextFilters := []qm.QueryMod{qm.Where(model.PlayerReportColumns.ID+" < ?", lastID), qm.OrderBy(model.PlayerReportColumns.ID + " DESC"), qm.Limit(1)}
+	prevFilters := []qm.QueryMod{qm.Where(model.PlayerReportColumns.ID+" > ?", firstId), qm.OrderBy(model.PlayerReportColumns.ID + " ASC"), qm.Limit(1)}
+	if reportedPlayerFilter != nil {
+		playerFilter := qm.Where(model.PlayerReportColumns.ReportedPlayerID+" = ?", reportedPlayerFilter.ID)
+		nextFilters = append(nextFilters, playerFilter)
+		prevFilters = append(prevFilters, playerFilter)
+	}
+
+	nextPage, err := model.PlayerReports(nextFilters...).One(boil.GetDB())
+	if err != nil {
+		if !errors.Is(err, sql.ErrNoRows) {
+			_ = c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+	}
+	previousPage, err := model.PlayerReports(prevFilters...).One(boil.GetDB())
+	if err != nil {
+		if !errors.Is(err, sql.ErrNoRows) {
+			_ = c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+	}
+	nextPageID := -1
+	if nextPage != nil {
+		nextPageID = nextPage.ID
+	}
+	previousPageID := -1
+	if previousPage != nil {
+		previousPageID = previousPage.ID
+	}
+	c.JSONP(http.StatusOK, listReportResponse{
+		Reports: reportsList,
+		pagination: pagination{
+			PrevPageID: previousPageID,
+			NextPageID: nextPageID,
+		},
+	})
+}
+
+func (s *Server) ListChat(c *gin.Context) {
+	const pageLimit = 20
 	curPos := 0
 	nextFrom := c.Query("next_from")
 	prevFrom := c.Query("prev_from")
@@ -138,7 +296,7 @@ func (s *Server) ListChat(c *gin.Context) {
 		filteredPlayer, err = model.Players(qm.Where(model.PlayerColumns.SteamID+" = ?", playerID)).One(boil.GetDB())
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
-				c.JSONP(http.StatusOK, []chatLog{})
+				c.JSONP(http.StatusOK, chatListResponse{})
 				return
 			}
 			_ = c.AbortWithError(http.StatusInternalServerError, err)
@@ -205,9 +363,11 @@ func (s *Server) ListChat(c *gin.Context) {
 		previousPageID = previousPage.ID
 	}
 	c.JSONP(http.StatusOK, chatListResponse{
-		Logs:       logs,
-		PrevPageID: previousPageID,
-		NextPageID: nextPageID,
+		Logs: logs,
+		pagination: pagination{
+			PrevPageID: previousPageID,
+			NextPageID: nextPageID,
+		},
 	})
 }
 
@@ -227,8 +387,32 @@ func (s *Server) ChartsPage(c *gin.Context) {
 		c.String(http.StatusUnauthorized, "Unauthorized")
 		return
 	}
-	logrus.Infof("User %s is logged in, rendering the home page", admin.Name)
 	bytes, err := os.ReadFile("assets/player_history.html")
+	if err != nil {
+		_ = c.AbortWithError(http.StatusInternalServerError, errors.Err(err))
+		return
+	}
+	c.Header("Content-Type", "text/html")
+	c.String(http.StatusOK, string(bytes))
+}
+
+func (s *Server) ReportsPage(c *gin.Context) {
+	session := sessions.Default(c)
+	steamID64 := session.Get("steamid_64")
+	if steamID64 == nil {
+		c.Redirect(http.StatusTemporaryRedirect, "/auth/steam/begin")
+		return
+	}
+	admin, err := s.GetAdmin(steamID64.(int64))
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Failed to check Steam ID")
+		return
+	}
+	if admin == nil {
+		c.String(http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+	bytes, err := os.ReadFile("assets/reports.html")
 	if err != nil {
 		_ = c.AbortWithError(http.StatusInternalServerError, errors.Err(err))
 		return
